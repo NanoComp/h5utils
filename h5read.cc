@@ -1,0 +1,74 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+
+#include <octave/oct.h>
+
+#include "arrayh5.h"
+
+DEFUN_DLD(h5read, args, , 
+"h5read(filename [, slicedim, islice, dataname])\n"
+"Read a 1d or 2d array slice from an HDF5 file.\n\n"
+"slicedim and islice are optional parameters indicating a \"slice\" of a\n"
+"multidimensional dataset, where slicedim is \"x\", \"y\", or \"z\", and\n"
+"islice is the index in that dimension.  The default is slicedim=\"z\" and\n"
+"islice=0, meaning the xy plane at z index 0 is read.\n\n"
+"The optional parameter dataname indicates the name of the dataset to read\n"
+"within the HDF5 file.  The default is to read the first dataset.\n"
+)
+{
+     string fname, dataname;
+     octave_value retval;
+     arrayh5 a;
+     int readerr;
+     int slicedim = 2, islice = 0;
+     
+     if (args.length() < 1 || args.length() > 4 || !args(0).is_string()
+	 || (args.length() >= 2 && !args(1).is_string())
+	 || (args.length() >= 3 && !args(2).is_real_scalar())
+	 || (args.length() >= 4 && !args(3).is_string())) {
+	  print_usage("h5read");
+	  return retval;
+     }
+     
+     fname = args(0).string_value();
+     if (args.length() >= 2)
+	  slicedim = tolower(*(args(1).string_value().c_str())) - 'x';
+     if (args.length() >= 3)
+	  islice = (int) (args(2).double_value() + 0.5);
+     
+     readerr = arrayh5_read(&a, fname.c_str(),
+			    args.length() >= 4 ? 
+			    args(3).string_value().c_str() : NULL, 
+			    slicedim, islice);
+     if (readerr) {
+	  fprintf(stderr, "error in h5read: %s\n",
+		  arrayh5_read_strerror[readerr]);
+	  return retval;
+     }
+
+     if (a.rank >= 2) {
+	  Matrix m(a.dims[0], a.dims[1]);
+
+	  for (int i = 0; i < a.dims[0]; ++i)
+	       for (int j = 0; j < a.dims[1]; ++j)
+		    m(i,j) = a.data[i*a.dims[1] + j];
+
+	  retval = m;
+     }
+     else if (a.rank == 1) {
+	  ColumnVector v(a.dims[0]);
+
+	  for (int i = 0; i < a.dims[0]; ++i)
+	       v(i) = a.data[i];
+
+	  retval = v;
+     }
+     else {
+	  retval = a.data[0];  /* scalar (rank = 0) */
+     }
+     
+     arrayh5_destroy(a);
+     
+     return retval;
+}
