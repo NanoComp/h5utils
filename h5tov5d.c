@@ -285,10 +285,8 @@ void output_v5d(char *v5d_fname, char *data_label,
 	  /* may call v5dSetLowLev() or v5dSetUnits() here; see Vis5d README */
 
 	  /* allocate array for copying transpose of data: */
-	  if (!transpose) {
-	       g = (float *) malloc(sizeof(float) * Nr * Nc * Nl[0]);
-	       CHECK(g, "out of memory!");
-	  }
+	  g = (float *) malloc(sizeof(float) * Nr * Nc * Nl[0]);
+	  CHECK(g, "out of memory!");
 
 	  for (iv = join ? ifile : 0; iv < (join ? ifile + 1 : NumVars); ++iv)
 	       for (it = 0; it < NumTimes; ++it) {
@@ -302,17 +300,17 @@ void output_v5d(char *v5d_fname, char *data_label,
 				   for (il = 0; il < Nl[0]; ++il)
 					g[ir + Nr * (ic + Nc * il)] =
 					     d[il + Nl[0] * (ic + Nc * ir)];
-			 CHECK(v5dWrite(it + 1, iv + 1, g),
-			       "error writing v5d output"); 
 		    }
 		    else {
-			 CHECK(v5dWrite(it + 1, iv + 1, d),
-			       "error writing v5d output"); 
+			 int id;
+			 for (id = 0; id < Nr * Nc * Nl[0]; ++id)
+			      g[id] = d[id];
 		    }
+		    CHECK(v5dWrite(it + 1, iv + 1, g),
+			  "error writing v5d output"); 
 	       }
 	  
-	  if (!transpose)
-	       free(g);
+	  free(g);
 	  
 	  if (!join || ifile == num_h5 - 1)
 	       v5dClose();
