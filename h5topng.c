@@ -247,7 +247,8 @@ int main(int argc, char **argv)
 				  (strlen(CMAP_DIR) + strlen(colormap) + 1));
      CHECK(cmap_fname, "out of memory");
      strcpy(cmap_fname, CMAP_DIR); strcat(cmap_fname, colormap);
-     if (!(cmap_f = fopen(cmap_fname, "r"))) {
+     if (colormap[0] == '.' || colormap[0] == '/'
+	 || !(cmap_f = fopen(cmap_fname, "r"))) {
 	  free(cmap_fname);
 	  cmap_fname = (char *) malloc(sizeof(char) * (strlen(colormap) + 1));
 	  CHECK(cmap_fname, "out of memory");
