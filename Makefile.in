@@ -21,6 +21,10 @@ H5TOPNG_TARGET = @H5TOPNG_TARGET@
 H5READ_TARGET = @H5READ_TARGET@
 PNG_LIBS = @PNG_LIBS@
 
+OCT_INSTALL_DIR = @OCT_INSTALL_DIR@
+H5READ_INSTALL_TARGET = @H5READ_INSTALL_TARGET@
+H5READ_UNINSTALL_TARGET = @H5READ_UNINSTALL_TARGET@
+
 TARGETS =  h5totxt $(H5TOPNG_TARGET) $(H5READ_TARGET)
 INSTALL_TARGETS = $(TARGETS:%=%-install)
 UNINSTALL_TARGETS = $(TARGETS:%=%-uninstall)
@@ -59,11 +63,16 @@ h5totxt-uninstall:
 	rm -f $(prefix)/bin/h5totxt
 	rm -f $(prefix)/man/man1/h5totxt.1
 
-h5read.oct-install:
-	@echo "h5read.oct is left in the build directory."
+h5read-install:
+	$(INSTALL) -d $(OCT_INSTALL_DIR)
+	$(INSTALL) -m 0755 h5read.oct $(OCT_INSTALL_DIR)
 
-h5read.oct-uninstall:
-	@echo "h5read.oct was not installed"
+h5read.oct-install: $(H5READ_INSTALL_TARGET)
+
+h5read-uninstall:
+	rm -f $(OCT_INSTALL_DIR)/h5read.oct
+
+h5read.oct-uninstall: $(H5READ_UNINSTALL_TARGET)
 
 install: $(INSTALL_TARGETS)
 

@@ -43,14 +43,32 @@ AC_CHECK_LIB(hdf5, H5Fopen, LIBS="-lhdf5 $LIBS",
 	     AC_MSG_ERROR([hdf5 libraries are required for compilation]))
 
 H5READ_TARGET=h5read.oct
+OCT_INSTALL_DIR=""
+H5READ_INSTALL_TARGET=""
+H5READ_UNINSTALL_TARGET=""
 AC_CHECK_PROGS(MKOCTFILE, mkoctfile, echo)
 if test "$MKOCTFILE" = "echo"; then
 	AC_MSG_WARN([can't find mkoctfile: won't be able to compile h5read.oct])
 	H5READ_TARGET=""
+else
+	# try to find installation directory
+	AC_CHECK_PROGS(OCTAVE, octave, echo)
+	AC_MSG_CHECKING(where octave plugins go)
+	OCT_INSTALL_DIR=`echo "DEFAULT_LOADPATH" | $OCTAVE -q | tr ':' '\n' | grep "site/oct" | head -1`
+	if test -n "$OCT_INSTALL_DIR"; then
+		H5READ_INSTALL_TARGET="h5read-install"
+		H5READ_UNINSTALL_TARGET="h5read-uninstall"
+		AC_MSG_RESULT($OCT_INSTALL_DIR)
+	else
+		AC_MSG_RESULT(unknown)
+	fi
 fi
 
 AC_SUBST(H5TOPNG_TARGET)
 AC_SUBST(H5READ_TARGET)
+AC_SUBST(OCT_INSTALL_DIR)
+AC_SUBST(H5READ_INSTALL_TARGET)
+AC_SUBST(H5READ_UNINSTALL_TARGET)
 AC_SUBST(PNG_LIBS)
 
 ###########################################################################
