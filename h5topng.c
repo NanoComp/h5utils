@@ -195,10 +195,15 @@ int main(int argc, char **argv)
 
      if (contour_fname) {
 	  int cnx, cny;
+	  char *fname, *dname;
+
+	  fname = split_fname(contour_fname, dname);
+	  if (!dname[0])
+	       dname = NULL;
 
 	  if (verbose)
-	       printf("reading contour data from \"%s\".\n", contour_fname);
-	  err = arrayh5_read(&contour_data, contour_fname, NULL, 
+	       printf("reading contour data from \"%s\".\n", fname);
+	  err = arrayh5_read(&contour_data, fname, dname, 
 			     slicedim, islice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(contour_data.rank >= 1,
@@ -211,6 +216,8 @@ int main(int argc, char **argv)
 	  CHECK(mask, "out of memory");
 	  compute_outlinemask(cnx,cny, contour_data.data,
 			      mask, background_value);
+
+	  free(fname);
      }
      
      for (ifile = optind; ifile < argc; ++ifile) {

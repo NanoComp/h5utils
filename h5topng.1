@@ -137,8 +137,10 @@ respectively.
 Superimpose contour outlines from the first dataset in the
 .I file
 HDF5 file, which should have the same dimensions as the input
-dataset, on all of the output images.  The contour outlines are around
-values that differ from
+dataset, on all of the output images.  You can use the syntax
+.I file:dataset
+to specify a particular dataset within the file.  The contour outlines
+are around values that differ from
 .I val
 (default 1.0).
 .TP
