@@ -19,6 +19,7 @@ distdir = $(package)-$(VERSION)
 OBJ_h5topng = h5topng.o arrayh5.o writepng.o
 SRC_h5read = h5read.cc arrayh5.o
 OBJ_h5totxt = h5totxt.o arrayh5.o
+OBJ_h5tovtk = h5tovtk.o arrayh5.o
 OBJ_h5fromtxt = h5fromtxt.o arrayh5.o
 OBJ_h5fromh4 = h5fromh4.o arrayh5.o arrayh4.o
 
@@ -31,7 +32,7 @@ V5D_INCLUDES = @V5D_INCLUDES@
 
 ###########################################################################
 
-TARGETS = h5fromtxt h5totxt @H5TOPNG_TARGET@ @H5READ_TARGET@ @H5TOV5D_TARGET@ @H5FROMH4_TARGET@
+TARGETS = h5fromtxt h5totxt h5tovtk @H5TOPNG_TARGET@ @H5READ_TARGET@ @H5TOV5D_TARGET@ @H5FROMH4_TARGET@
 INSTALL_TARGETS = $(TARGETS:%=%-install)
 UNINSTALL_TARGETS = $(TARGETS:%=%-uninstall)
 
@@ -47,6 +48,9 @@ h5topng: $(OBJ_h5topng)
 
 h5totxt: $(OBJ_h5totxt)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5totxt) $(LIBS) -o $@
+
+h5tovtk: $(OBJ_h5tovtk)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5tovtk) $(LIBS) -o $@
 
 h5fromtxt: $(OBJ_h5fromtxt)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5fromtxt) $(LIBS) -o $@
@@ -85,6 +89,16 @@ h5totxt-install:
 h5totxt-uninstall:
 	rm -f $(prefix)/bin/h5totxt
 	rm -f $(prefix)/man/man1/h5totxt.1
+
+h5tovtk-install:
+	$(INSTALL) -d $(prefix)/bin
+	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -m 0755 -s h5tovtk $(prefix)/bin/`echo h5tovtk|sed '$(transform)'`
+	$(INSTALL) -m 0644 h5tovtk.1 $(prefix)/man/man1
+
+h5tovtk-uninstall:
+	rm -f $(prefix)/bin/h5tovtk
+	rm -f $(prefix)/man/man1/h5tovtk.1
 
 h5fromtxt-install:
 	$(INSTALL) -d $(prefix)/bin
@@ -141,7 +155,7 @@ dist:
 	rm -rf $(distdir)
 
 clean:
-	rm -f h5topng.o h5tov5d.o h5totxt.o h5fromtxt.o h5fromh4.o h5read.o arrayh5.o arrayh4.o writepng.o $(TARGETS) core a.out octave-core
+	rm -f h5topng.o h5tov5d.o h5totxt.o h5tovtk.o h5fromtxt.o h5fromh4.o h5read.o arrayh5.o arrayh4.o writepng.o $(TARGETS) core a.out octave-core
 
 distclean: clean
 	rm -f config.cache Makefile config.log config.status config.h $(TARGETS)

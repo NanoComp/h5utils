@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
 		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, h5_fname, dname, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, dname, NULL, slicedim, islice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  

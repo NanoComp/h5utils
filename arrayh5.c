@@ -183,6 +183,7 @@ const char arrayh5_read_strerror[][100] = {
 };
 
 int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
+		 char **dataname,
 		 int slicedim, int islice)
 {
      hid_t file_id = -1, data_id = -1, space_id = -1;
@@ -311,7 +312,10 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  H5Sclose(space_id);
      if (data_id >= 0)
 	  H5Dclose(data_id);
-     free(dname);
+     if (dataname)
+	  *dataname = dname;
+     else
+	  free(dname);
      if (file_id >= 0)
 	  H5Fclose(file_id);
 

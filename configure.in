@@ -2,7 +2,7 @@
 AC_INIT(h5topng.c)
 AC_CONFIG_HEADER(config.h)
 
-VERSION=1.6
+VERSION=1.7
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [h5utils version number string])
 AC_SUBST(VERSION)
 
@@ -142,6 +142,33 @@ fi
 AC_SUBST(H5TOV5D_TARGET)
 AC_SUBST(V5D_FILES)
 AC_SUBST(V5D_INCLUDES)
+
+###########################################################################
+
+AC_CHECK_HEADERS([netinet/in.h])
+
+AC_MSG_CHECKING([for htons])
+AC_TRY_LINK([#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif], [unsigned short i; htons(i);], [htons=yes
+	AC_DEFINE([HAVE_HTONS],1,[Define if you have htons.])], htons=no)
+AC_MSG_RESULT($htons)
+
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(float)
+
+if test "x$ac_cv_sizeof_unsigned_long" = "x$ac_cv_sizeof_float"; then
+	AC_MSG_CHECKING([for htonl])
+	AC_TRY_LINK([#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif], [unsigned short i; htonl(i);], [htonl=yes
+	     AC_DEFINE([HAVE_HTONL],1,[Define if you have htonl.])], htonl=no)
+	AC_MSG_RESULT($htonl)
+fi
+
+if test "x$htons" != xyes -o "x$htonl" != xyes; then
+	AC_C_BIGENDIAN
+fi
 
 ###########################################################################
 
