@@ -209,9 +209,16 @@ void output_v5d(char *v5d_fname, char *data_label,
 		    
 		    numTimes = a.rank < 4 ? 1 : a.dims[a.rank - 4];
 		    fdim = a.rank <= 3 ? 0 : a.rank - 3;
-		    nr = fdim >= a.rank ? 1 : a.dims[fdim];
-		    nc = fdim+1 >= a.rank ? 1 : a.dims[fdim+1];
-		    Nl[iv] = fdim+2 >= a.rank ? 1 : a.dims[fdim+2];
+		    if (!transpose) {
+			 nr = fdim >= a.rank ? 1 : a.dims[fdim];
+			 nc = fdim+1 >= a.rank ? 1 : a.dims[fdim+1];
+			 Nl[iv] = fdim+2 >= a.rank ? 1 : a.dims[fdim+2];
+		    }
+		    else {
+			 nr = fdim+2 >= a.rank ? 1 : a.dims[fdim+2];
+			 nc = fdim+1 >= a.rank ? 1 : a.dims[fdim+1];
+			 Nl[iv] = fdim >= a.rank ? 1 : a.dims[fdim];
+		    }
 		    CHECK(numTimes == NumTimes && nr == Nr && nc == Nc, 
 			  "datasets to be joined must have same dimensions");
 
