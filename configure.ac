@@ -62,7 +62,7 @@ AC_SUBST(PNG_LIBS)
 
 ###########################################################################
 
-AC_CHECK_LIB(matheval, evaluator_evaluate, H5MATH=yes, H5MATH=no)
+AC_CHECK_LIB(matheval, evaluator_get_variables, H5MATH=yes, H5MATH=no)
 
 if test $H5MATH = yes; then
 	MORE_H5UTILS="h5math $MORE_H5UTILS"

@@ -79,6 +79,8 @@ int main(int argc, char **argv)
      char *expr_string = 0, *expr_filename = 0;
      char *data_name = 0;
      char *out_fname, *out_dname;
+     char **eval_vars;
+     int eval_nvars;
      char **vars;
      double *vals;
      void *evaluator;
@@ -263,6 +265,9 @@ int main(int argc, char **argv)
 	       expr_string = (char *) realloc(expr_string, len);
 	       strcat(expr_string, buf);
 	  }
+	  for (ix = 0; ix < len; ++ix)
+	       if (expr_string[ix] == '\n')
+		    expr_string[ix] = ' '; /* matheval chokes on newlines */
 
 	  if (expr_filename) fclose(f);
      }
@@ -270,17 +275,20 @@ int main(int argc, char **argv)
      CHECK(evaluator = evaluator_create(expr_string),
 	   "error parsing symbolic expression");
 
-     /* FIXME: when libmatheval provides a way to detect undefined vars,
-	use it. */
+     evaluator_get_variables(evaluator, &eval_vars, &eval_nvars);
+     for (ix = 0; ix < eval_nvars; ++ix) {
+	  for (iy = 0; iy < n + 4 && strcmp(eval_vars[ix], vars[iy]); ++iy)
+	       ;
+	  if (iy == n + 4) {
+	       fprintf(stderr, "h5math error: unrecognized variable \"%s\"\n",
+		       eval_vars[ix]);
+	       exit(EXIT_FAILURE);
+	  }
+     }
      
      if (verbose) {
-	  char *buf = (char*) malloc(sizeof(char) * 
-				     (1 + 
-				      evaluator_calculate_length(evaluator)));
-	  CHECK(buf, "out of memory");
-	  evaluator_write(evaluator, buf);
+	  char *buf = evaluator_get_string(evaluator);
 	  printf("Evaluating expression: %s\n", buf);
-	  free(buf);
      }
 
      for (ix = 0; ix < nx; ++ix)
