@@ -36,7 +36,7 @@ static void convert_row(int png_width, int data_width,
 			REAL scaley, REAL offsety,
 			REAL *datarow, REAL *datarow2, REAL weightrow,
 			int stride, REAL *maskrow, REAL *maskrow2,
-			REAL mask_thresh, REAL *mask_prev,
+			REAL mask_thresh, REAL *mask_prev, int init_mask_prev,
 			REAL minrange, REAL maxrange, REAL scale, int invert,
 			png_byte * row_pointer)
 {
@@ -83,10 +83,14 @@ static void convert_row(int png_width, int data_width,
 
 	  if (maskrow != NULL) {
 	       REAL maskmin, maskmax;
-	       maskmin = MIN(MIN(maskval, i ? mask_prev[i-1] : maskval), 
-				 mask_prev[i]);
-	       maskmax = MAX(MAX(maskval, i ? mask_prev[i-1] : maskval), 
-				 mask_prev[i]);
+	       if (init_mask_prev)
+		    maskmin = maskmax = maskval;
+	       else {
+		    maskmin = MIN(MIN(maskval, i ? mask_prev[i-1] : maskval), 
+				  mask_prev[i]);
+		    maskmax = MAX(MAX(maskval, i ? mask_prev[i-1] : maskval), 
+				  mask_prev[i]);
+	       }
 	       mask_prev[i] = maskval;
 	       if (maskmin <= mask_thresh && maskmax >= mask_thresh) {
 		    row_pointer[i] = 255;
@@ -277,7 +281,7 @@ void writepng(char *filename,
 				data_height, 
 				mask ? mask + n : NULL,
 				mask ? mask + n3 : NULL,
-				mask_thresh, mask_prev,
+				mask_thresh, mask_prev, row == 0,
 				minrange, maxrange, scale, invert,
 				row_pointer);
 	       else
@@ -287,7 +291,7 @@ void writepng(char *filename,
 				1, 
 				mask ? mask + n * data_width : NULL,
 				mask ? mask + n3 * data_width : NULL,
-				mask_thresh, mask_prev,
+				mask_thresh, mask_prev, row == 0,
 				minrange, maxrange, scale, invert,
 				row_pointer);
 	       png_write_rows(png_ptr, &row_pointer, 1);
