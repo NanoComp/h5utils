@@ -1,4 +1,4 @@
-h5utils 1.8 (mm/dd/yy)
+h5utils 1.8 (5/22/04)
 
   * New -A and -a options for h5topng to allow translucent overlays
     from one file onto another (an alternative or complement to the
