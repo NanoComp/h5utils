@@ -34,7 +34,9 @@ only a single dataset per HDF4 file is converted.)
 
 HDF4 and HDF5 are free, portable binary formats and supporting libraries
 developed by the National Center for Supercomputing Applications at
-the University of Illinois in Urbana-Champaign.  A single
+the University of Illinois in Urbana-Champaign.
+
+A single
 .I h5
 file can contain multiple data sets; by default,
 .I h5fromh4
@@ -74,12 +76,12 @@ however.
 \fB\-o\fR \fIfile\fR
 Send HDF5 output to
 .I file
-rather than to the input filename with .hdf replaced with .h5 the
-default.  If multiple input files were specified, this causes all
+rather than to the input filename with .hdf replaced with .h5 (the
+default).  If multiple input files were specified, this causes all
 input datasets to be stored in
 .I file
-(rather than in separate files), with the input filenames (minus the
-.hdf suffix) as the dataset names.
+(rather than in separate files), with the input filenames (minus the .hdf
+suffix) as the dataset names.
 .TP
 \fB\-d\fR \fIname\fR
 Write to dataset
