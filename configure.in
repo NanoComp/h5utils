@@ -2,7 +2,7 @@
 AC_INIT(h5topng.c)
 AC_CONFIG_HEADER(config.h)
 
-VERSION=1.5
+VERSION=1.5.1
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [h5utils version number string])
 AC_SUBST(VERSION)
 
