@@ -46,6 +46,7 @@ void usage(FILE *f)
 	     "         -h : this help message\n"
              "         -V : print version number and copyright\n"
 	     "         -v : verbose output\n"
+	     "         -T : transposed output dimensions\n"
 	     "  -o <file> : output datasets from all input files to <file>\n"
 "   -1,-2,-4 : number of bytes per data point to use in output (default: 1)\n"
 	     "              (fewer bytes is faster, but has less resolution)\n"
@@ -107,14 +108,14 @@ static char *split_fname(char *fname, char **data_name)
    Kellum, Brian Paul, Dave Santek, and Andre Battaiola, and is
    distributed under the GNU General Public License. */
 void output_v5d(char *v5d_fname, char *data_label,
-		int store_bytes,
+		int store_bytes, int transpose,
 		char **h5_fnames, int num_h5, int join)
 {
      char *data_name;
      char *fname;
      arrayh5 a;
      int it, iv, firstdim, ifile;
-     float *g;
+     float *g = 0;
 
      /** Parameters to v5dCreate: */
      int NumTimes;                      /* number of time steps */
@@ -159,14 +160,21 @@ void output_v5d(char *v5d_fname, char *data_label,
 	  }
 	  CHECK(NumVars <= MAXVARS, "too many vars");
 
-	  /* we will need to transpose the data, since HDF5 gives us the
-	     data in row-major order, while Vis5D expects it in
-	     column-major order (we could avoid physically transposing the
-	     data by passing Vis5d transposed dimensions, but that seems
-	     ugly). */
-	  Nr = firstdim >= a.rank ? 1 : a.dims[firstdim];
-	  Nc = firstdim+1 >= a.rank ? 1 : a.dims[firstdim+1];
-	  Nl[0] = firstdim+2 >= a.rank ? 1 : a.dims[firstdim+2];
+	  if (!transpose) {
+	       /* we will need to transpose the data, since HDF5 gives
+		  us the data in row-major order, while Vis5D expects
+		  it in column-major order (we could avoid physically
+		  transposing the data by passing Vis5d transposed
+		  dimensions, but that seems ugly). */
+	       Nr = firstdim >= a.rank ? 1 : a.dims[firstdim];
+	       Nc = firstdim+1 >= a.rank ? 1 : a.dims[firstdim+1];
+	       Nl[0] = firstdim+2 >= a.rank ? 1 : a.dims[firstdim+2];
+	  }
+	  else {
+	       Nr = firstdim+2 >= a.rank ? 1 : a.dims[firstdim+2];
+	       Nc = firstdim+1 >= a.rank ? 1 : a.dims[firstdim+1];
+	       Nl[0] = firstdim >= a.rank ? 1 : a.dims[firstdim];
+	  }
 
 	  if (!v5d_fname) {
 	       fname = split_fname(h5_fnames[ifile], &data_name);
@@ -270,25 +278,34 @@ void output_v5d(char *v5d_fname, char *data_label,
 	  /* may call v5dSetLowLev() or v5dSetUnits() here; see Vis5d README */
 
 	  /* allocate array for copying transpose of data: */
-	  g = (float *) malloc(sizeof(float) * Nr * Nc * Nl[0]);
-	  CHECK(g, "out of memory!");
-	  
+	  if (!transpose) {
+	       g = (float *) malloc(sizeof(float) * Nr * Nc * Nl[0]);
+	       CHECK(g, "out of memory!");
+	  }
+
 	  for (iv = join ? ifile : 0; iv < (join ? ifile + 1 : NumVars); ++iv)
 	       for (it = 0; it < NumTimes; ++it) {
 		    double *d = a.data + (((join ? 0 : iv) * NumTimes + it)
 					  * Nr * Nc * Nl[0]);
-		    int ir, ic, il;
-		    
-		    for (ir = 0; ir < Nr; ++ir)
-			 for (ic = 0; ic < Nc; ++ic)
-			      for (il = 0; il < Nl[0]; ++il)
-				   g[ir + Nr * (ic + Nc * il)] =
-					d[il + Nl[0] * (ic + Nc * ir)];
-		    CHECK(v5dWrite(it + 1, iv + 1, g),
-			  "error writing v5d output"); 
+
+		    if (!transpose) {
+			 int ir, ic, il;
+			 for (ir = 0; ir < Nr; ++ir)
+			      for (ic = 0; ic < Nc; ++ic)
+				   for (il = 0; il < Nl[0]; ++il)
+					g[ir + Nr * (ic + Nc * il)] =
+					     d[il + Nl[0] * (ic + Nc * ir)];
+			 CHECK(v5dWrite(it + 1, iv + 1, g),
+			       "error writing v5d output"); 
+		    }
+		    else {
+			 CHECK(v5dWrite(it + 1, iv + 1, d),
+			       "error writing v5d output"); 
+		    }
 	       }
 	  
-	  free(g);
+	  if (!transpose)
+	       free(g);
 	  
 	  if (!join || ifile == num_h5 - 1)
 	       v5dClose();
@@ -306,10 +323,10 @@ int main(int argc, char **argv)
      extern char *optarg;
      extern int optind;
      int c;
-     int verbose = 0;
+     int verbose = 0, transpose = 0;
      int store_bytes = 1;
 
-     while ((c = getopt(argc, argv, "ho:d:vV124")) != -1)
+     while ((c = getopt(argc, argv, "ho:d:vTV124")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -331,6 +348,9 @@ int main(int argc, char **argv)
 		   return EXIT_SUCCESS;
 	      case 'v':
 		   verbose = 1;
+		   break;
+	      case 'T':
+		   transpose = 1;
 		   break;
 	      case '1':
 		   store_bytes = 1;
@@ -363,7 +383,7 @@ int main(int argc, char **argv)
 	  return EXIT_FAILURE;
      }
 
-     output_v5d(v5d_fname, data_name, store_bytes,
+     output_v5d(v5d_fname, data_name, store_bytes, transpose,
 		argv + optind, argc - optind, v5d_fname != NULL);
 
      if (data_name)
