@@ -2,6 +2,8 @@ h5utils 1.5
 
   * Added h5fromh4 program to convert HDF4 datasets to HDF5 format.
 
+  * Added -S <s> option to h5topng as a shortcut for -X <s> -Y <s>.
+
 h5utils 1.4 (5/28/00)
 
   * Added h5fromtxt program to convert text input to an HDF5 dataset.

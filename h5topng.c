@@ -47,6 +47,7 @@ void usage(FILE *f)
 	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
 	     "    -X <sx> : scale width by <sx> [ default: 1.0 ]\n"
 	     "    -Y <sy> : scale height by <sy> [ default: 1.0 ]\n"
+	     "     -S <s> : equivalent to -X <s> -Y <s>\n"
 	     "  -s <skew> : skew axes by <skew> degrees [ default: 0 ]\n"
 	     "         -T : transpose the data [default: no]\n"
 	     "         -c : blue-white-red palette instead of grayscale\n"
@@ -112,7 +113,7 @@ int main(int argc, char **argv)
      double skew = 0.0;
      int ifile;
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:TrZs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:S:TrZs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -186,6 +187,9 @@ int main(int argc, char **argv)
 		   break;
 	      case 'Y':
 		   scaley = atof(optarg);
+		   break;
+	      case 'S':
+		   scalex = scaley = atof(optarg);
 		   break;
 	      case 's':
 		   skew = atof(optarg) * 3.14159265358979323846 / 180.0;
