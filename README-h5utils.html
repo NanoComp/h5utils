@@ -21,9 +21,13 @@ make
 make install
 </pre>
 
+<p>You can use <code>make uninstall</code> to get rid of all the
+installed files.
+
 <p>Note that you need to have certain prerequisites, like the PNG and
-zlib libraries, and/or GNU Octave, in order to compile all of the
-utilities, as described below.
+zlib libraries and/or GNU Octave, in order to compile all of the
+utilities, as described below.  If you don't have these, then only
+some of the utilities will be compiled.
 
 <p>The utilities include:
 
@@ -71,10 +75,9 @@ tool; you can download it or find more about it at the <a
 href="http://www.che.wisc.edu/octave/">Octave home page</a>.
 
 <p>You will need to have Octave already installed in order to compile
-this.  Once it is installed, you can either place
-<code>h5read.oct</code> with the other <code>.oct</code> files that
-came with Octave, or you can just leave it in the directory you run
-octave from.
+this.  Once it is compiled, <code>make install</code> places
+<code>h5read.oct</code> in the global site directory for Octave
+plugins (<code><i>OCTAVE_HOME</i>/libexec/octave/site/oct/<i>ARCH</i>/</code>).
 
 <p>In Octave, type <code>help h5read</code> for instructions.
 
