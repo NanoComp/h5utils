@@ -42,7 +42,8 @@ from a two-dimensional array of floating-point values.  You might find
 this useful if you want to directly output images from your own
 scientific programs.
 
-There's no man page for h5topng yet.  Run 'h5topng -h' for options.
+h5topng includes a man page; you can also run 'h5topng -h' for a terse
+listing of options.
 
 *** h5read.oct:
 
