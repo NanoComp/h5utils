@@ -55,7 +55,8 @@ void usage(FILE *f)
 	     "    -t <it> : take t=<it> slice of data's last dimension\n"
 	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "     -r <r> : use resolution <r> for xyz coordinate units in expression\n"
-	     "  -d <name> : use dataset <name> in the input/output files (default: first dataset/%s)\n"
+	     "  -d <name> : use dataset <name> in the input/output files\n"
+	     "              [ default: first dataset/%s ]\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n",
 	     default_data_name
 	  );
