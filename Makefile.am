@@ -5,7 +5,8 @@ colormaps/jet colormaps/lines colormaps/pink colormaps/prism		\
 colormaps/spring colormaps/summer colormaps/vga colormaps/winter	\
 colormaps/yarg colormaps/yellow
 
-EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS)
+EXTRA_MANS = h5topng.1.in h5tov5d.1 h5fromh4.1
+EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS) $(EXTRA_MANS)
 
 noinst_PROGRAMS = h5fromitxt # quick hack, not really supported
 bin_PROGRAMS = h5totxt h5fromtxt h5tovtk @MORE_H5UTILS@
@@ -13,7 +14,6 @@ EXTRA_PROGRAMS = h5topng h5tov5d h5fromh4
 
 dist_man_MANS = h5totxt.1 h5fromtxt.1 h5tovtk.1 @MORE_H5UTILS_MANS@
 nodist_man_MANS = @H5TOPNG_MAN@
-EXTRA_MANS = h5topng.1.in h5tov5d.1 h5fromh4.1
 
 COMMON_SRC = arrayh5.c arrayh5.h h5utils.c h5utils.h
 
