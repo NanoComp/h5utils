@@ -31,8 +31,7 @@ V5D_INCLUDES = @V5D_INCLUDES@
 
 ###########################################################################
 
-TARGETS = h5fromtxt h5totxt @H5TOPNG_TARGET@ @H5READ_TARGET@ \
-          @H5TOV5D_TARGET@ @H5FROMH4_TARGET@
+TARGETS = h5fromtxt h5totxt @H5TOPNG_TARGET@ @H5READ_TARGET@ @H5TOV5D_TARGET@ @H5FROMH4_TARGET@
 INSTALL_TARGETS = $(TARGETS:%=%-install)
 UNINSTALL_TARGETS = $(TARGETS:%=%-uninstall)
 
