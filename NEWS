@@ -5,6 +5,9 @@ h5utils 1.7 (not yet released)
     the syntax: -c <colortable>.  The old behavior corresponds to the
     included "bluered" colortable, invoked via: -c bluered.
 
+  * New -R option for h5topng to use a consistent color scale for
+    all specified files.
+
   * Added h5tovtk program to output VTK (Visualization ToolKit) data files.
 
   * Support -T (transpose dimensions) option in h5tov5d.

@@ -60,6 +60,7 @@ void usage(FILE *f)
 	     "         -Z : center color scale at zero [default: no]\n"
 	     "   -m <min> : set bottom of color scale to data value <min>\n"
 	     "   -M <max> : set top of color scale to data value <max>\n"
+	     "         -R : use uniform colormap range for all files\n"
 	     "  -C <file> : superimpose contour outlines from <file>\n"
 	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
@@ -145,8 +146,8 @@ int main(int argc, char **argv)
      char *png_fname = NULL, *contour_fname = NULL, *data_name = NULL;
      REAL mask_thresh = 0;
      int mask_thresh_set = 0;
-     double min = 0, max = 0;
-     int min_set = 0, max_set = 0;
+     double min = 0, max = 0, allmin = 0, allmax = 0;
+     int min_set = 0, max_set = 0, collect_range = 0;
      extern char *optarg;
      extern int optind;
      int c;
@@ -168,7 +169,7 @@ int main(int argc, char **argv)
      CHECK(colormap, "out of memory");
      strcpy(colormap, CMAP_DEFAULT);
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:c:m:M:C:b:d:vX:Y:S:TrZs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:c:m:M:RC:b:d:vX:Y:S:TrZs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -188,6 +189,9 @@ int main(int argc, char **argv)
 		   break;
 	      case 'Z':
 		   zero_center = 1;
+		   break;
+	      case 'R':
+		   collect_range = 1;
 		   break;
 	      case 'o':
 		   free(png_fname);
@@ -324,7 +328,10 @@ int main(int argc, char **argv)
 
 	  free(fname);
      }
-     
+
+ process_files:     
+     if (verbose)
+	  printf("------\n");
      for (ifile = optind; ifile < argc; ++ifile) {
           char *dname, *h5_fname;
           h5_fname = split_fname(argv[ifile], &dname);
@@ -366,6 +373,10 @@ int main(int argc, char **argv)
 		    min = a_min;
 	       if (!max_set)
 		    max = a_max;
+	       if (ifile == optind || a_min < allmin)
+		    allmin = a_min;
+	       if (ifile == optind || a_max > allmax)
+		    allmax = a_max;
 	       if (min > max) {
 		    invert = !invert;
 		    a_min = min;
@@ -378,22 +389,35 @@ int main(int argc, char **argv)
 	       }
 	  }
 	  
-	  nx = a.dims[0];
-	  ny = a.rank < 2 ? 1 : a.dims[1];
-	  
-	  if (verbose)
-	       printf("writing \"%s\" from %dx%d input data.\n",
-		      png_fname, nx, ny);
-	  
-	  writepng(png_fname, nx, ny, transpose, skew,
-		   scaley, scalex, a.data, 
-		   contour_fname ? contour_data.data : NULL, mask_thresh,
-		   min, max, invert, cmap);
-
+	  if (!collect_range) {
+	       nx = a.dims[0];
+	       ny = a.rank < 2 ? 1 : a.dims[1];
+	       
+	       if (verbose)
+		    printf("writing \"%s\" from %dx%d input data.\n",
+			   png_fname, nx, ny);
+	       
+	       writepng(png_fname, nx, ny, transpose, skew,
+			scaley, scalex, a.data, 
+			contour_fname ? contour_data.data : NULL, mask_thresh,
+			min, max, invert, cmap);
+	  }
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
 	  free(h5_fname);
      }
+     if (verbose && optind < argc - 1)
+	  printf("all data range from %g to %g.\n", allmin, allmax);
+     if (collect_range) {
+	  if (!min_set)
+	       min = allmin;
+	  if (!max_set)
+	       max = allmax;
+	  min_set = max_set = 1;
+	  collect_range = 0;
+	  goto process_files;
+     }
+
      if (contour_fname)
 	  arrayh5_destroy(contour_data);
      free(contour_fname);

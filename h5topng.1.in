@@ -155,7 +155,15 @@ or
 .I max
 respectively.  See also the
 .B -Z
-option.
+and
+.B -R
+options.
+.TP
+.B -R
+When multiple files are specified, set the bottom and top of the color
+maps according to the minimum and maximum over all the data.  This is
+useful to process many files using a consistent color scale, since
+otherwise the scale is set for each file individually.
 .TP
 \fB\-C\fR \fIfile\fR, \fB\-b\fR \fIval\fR
 Superimpose contour outlines from the first dataset in the
