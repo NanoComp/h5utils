@@ -29,7 +29,22 @@
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "arrayh5 error: %s\n", msg); exit(EXIT_FAILURE); } }
 
-arrayh5 arrayh5_create(int rank, const int *dims)
+#define CHK_MALLOC(p, t, n) CHECK(p = (t *) malloc(sizeof(t) * (n)), "out of memory")
+
+/* Normally, HDF5 prints out all sorts of error messages, e.g. if a dataset
+   can't be found, in addition to returning an error code.  The following
+   macro can be wrapped around code to temporarily suppress error messages. */
+
+#define SUPPRESS_HDF5_ERRORS(statements) { \
+     H5E_auto_t xxxxx_err_func; \
+     void *xxxxx_err_func_data; \
+     H5Eget_auto(&xxxxx_err_func, &xxxxx_err_func_data); \
+     H5Eset_auto(NULL, NULL); \
+     { statements; } \
+     H5Eset_auto(xxxxx_err_func, xxxxx_err_func_data); \
+}
+
+arrayh5 arrayh5_create_withdata(int rank, const int *dims, double *data)
 {
      arrayh5 a;
      int i;
@@ -37,8 +52,7 @@ arrayh5 arrayh5_create(int rank, const int *dims)
      CHECK(rank >= 0, "non-positive rank");
      a.rank = rank;
      
-     a.dims = (int *) malloc(sizeof(int) * rank);
-     CHECK(a.dims, "out of memory");
+     CHK_MALLOC(a.dims, int, rank);
 
      a.N = 1;
      for (i = 0; i < rank; ++i) {
@@ -46,9 +60,17 @@ arrayh5 arrayh5_create(int rank, const int *dims)
 	  a.N *= dims[i];
      }
 
-     a.data = (double *) malloc(sizeof(double) * a.N);
-     CHECK(a.data, "out of memory");
+     if (data)
+	  a.data = data;
+     else {
+	  CHK_MALLOC(a.data, double, a.N);
+     }
      return a;
+}
+
+arrayh5 arrayh5_create(int rank, const int *dims)
+{
+     return arrayh5_create_withdata(rank, dims, NULL);
 }
 
 arrayh5 arrayh5_clone(arrayh5 a)
@@ -74,6 +96,53 @@ int arrayh5_conformant(arrayh5 a, arrayh5 b)
      return 1;
 }
 
+static void rtranspose(int curdim, int rank, const int *dims,
+		       int curindex, int curindex_t,
+		       const double *data, double *data_t)
+{
+     int prod_before = 1, prod_after = 1;
+     int i;
+     
+     if (rank == 0) {
+	  *data_t = *data;
+	  return;
+     }
+
+     for (i = 0; i < curdim; ++i)
+	  prod_before *= dims[i];
+     for (i = curdim + 1; i < rank; ++i)
+	  prod_after *= dims[i];
+
+     if (curdim == rank - 1) {
+	  for (i = 0; i < dims[curdim]; ++i)
+	       data_t[curindex_t + i * prod_before] = data[curindex + i];
+     }
+     else {
+	  for (i = 0; i < dims[curdim]; ++i)
+	       rtranspose(curdim + 1, rank, dims,
+			  curindex + i * prod_after,
+			  curindex_t + i * prod_before,
+			  data, data_t);
+     }
+}
+
+void arrayh5_transpose(arrayh5 *a)
+{
+     double *data_t;
+     int i;
+
+     CHK_MALLOC(data_t, double, a->N);
+     rtranspose(0, a->rank, a->dims, 0, 0, a->data, data_t);
+     free(a->data);
+     a->data = data_t;
+
+     for (i = 0; i < a->rank - 1 - i; ++i) {
+	  int dummy = a->dims[i];
+	  a->dims[i] = a->dims[a->rank - 1 - i];
+	  a->dims[a->rank - 1 - i] = dummy;
+     }
+}
+
 void arrayh5_getrange(arrayh5 a, double *min, double *max)
 {
      int i;
@@ -95,7 +164,7 @@ static herr_t find_dataset(hid_t group_id, const char *name, void *d)
 
      H5Gget_objinfo(group_id, name, 1, &info);
      if (info.type == H5G_DATASET) {
-	  *dname = malloc(sizeof(char) * (strlen(name) + 1));
+	  CHK_MALLOC(*dname, char, strlen(name) + 1);
 	  strcpy(*dname, name);
 	  return 1;
      }
@@ -133,8 +202,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
      }
  
      if (datapath && datapath[0]) {
-	  dname = (char*) malloc(sizeof(char) * (strlen(datapath) + 1));
-	  CHECK(dname, "out of memory");
+	  CHK_MALLOC(dname, char, strlen(datapath) + 1);
 	  strcpy(dname, datapath);
      }
      else {
@@ -157,10 +225,9 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  goto done;
      }
      
-     dims = (int *) malloc(sizeof(int) * rank);
-     dims_copy = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     maxdims = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     CHECK(dims_copy && maxdims, "out of memory!");
+     CHK_MALLOC(dims, int, rank);
+     CHK_MALLOC(dims_copy, hsize_t, rank);
+     CHK_MALLOC(maxdims, hsize_t, rank);
 
      H5Sget_simple_extent_dims(space_id, dims_copy, maxdims);
      for (i = 0; i < rank; ++i)
@@ -185,10 +252,9 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  hid_t mem_space_id;
 	  herr_t readerr;
 
-	  start = (hssize_t *) malloc(sizeof(hssize_t) * rank);
-	  count = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-	  count2 = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-	  CHECK(start && count && count2, "out of memory");
+	  CHK_MALLOC(start, hssize_t, rank);
+	  CHK_MALLOC(count, hsize_t, rank);
+	  CHK_MALLOC(count2, hsize_t, rank);
 
 	  for (i = 0; i < rank; ++i) {
 	       count[i] = dims[i];
@@ -250,4 +316,47 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  H5Fclose(file_id);
 
      return err;
+}
+
+static int dataset_exists(hid_t id, const char *name)
+{
+     hid_t data_id;
+     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id, name));
+     if (data_id >= 0)
+          H5Dclose(data_id);
+     return (data_id >= 0);
+}
+
+void arrayh5_write(arrayh5 a, char *filename, char *dataname,
+		   short append_data)
+{
+     int i;
+     hid_t file_id, space_id, type_id, data_id;
+     hsize_t *dims_copy;
+
+     if (append_data)
+	  file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+     else
+	  file_id = H5Fcreate(filename, H5F_ACC_TRUNC,
+			      H5P_DEFAULT, H5P_DEFAULT);
+     CHECK(file_id >= 0, "error opening HDF5 output file");     
+
+     if (dataset_exists(file_id, dataname))
+	  H5Gunlink(file_id, dataname);  /* delete it */
+
+     CHECK(a.rank > 0, "non-positive rank");
+     CHK_MALLOC(dims_copy, hsize_t, a.rank);
+     for (i = 0; i < a.rank; ++i)
+	  dims_copy[i] = a.dims[i];
+     space_id = H5Screate_simple(a.rank, dims_copy, NULL);
+     free(dims_copy);
+
+     type_id = H5T_NATIVE_DOUBLE;
+     data_id = H5Dcreate(file_id, dataname, type_id, space_id, H5P_DEFAULT);
+     H5Sclose(space_id);
+
+     H5Dwrite(data_id, type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, a.data);
+
+     H5Dclose(data_id);
+     H5Fclose(file_id);
 }

@@ -57,7 +57,7 @@ void usage(FILE *f)
 	     "  -C <file> : superimpose contour outlines from <file>\n"
 	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
-	     "           -- you can also specify a dataset via <filename>:<name>\n"
+	     "              -- you can also specify a dataset via <filename>:<name>\n"
 	  );
 }
 

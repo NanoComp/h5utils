@@ -48,7 +48,7 @@ void usage(FILE *f)
 "   -1,-2,-4 : number of bytes per data point to use in output (default: 1)\n"
 	     "              (fewer bytes is faster, but has less resolution)\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
-	     "           -- you can also specify a dataset via <filename>:<name>\n"
+	     "              -- you can also specify a dataset via <filename>:<name>\n"
 	  );
 }
 

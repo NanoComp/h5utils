@@ -66,6 +66,17 @@ comma-delimited format, suitable for importing into a spreadsheet.
 Run <code>h5totxt -h</code> for a terse listing of its options; there
 is also a man page.
 
+<h2>h5fromtxt</h2>
+
+<p>In some sense the inverse of <code>h5totxt</code>, this program
+takes text input and outputs a multi-dimensional numeric dataset in an
+HDF5 file.  The input numbers can be delimited by arbitrary
+characters, and it can automatically guess the dimensions of one- and
+two-dimensional input.  Multi-dimensional datasets can also be written
+by specifying their dimensions explicitly.  Run <code>h5fromtxt
+-h</code> for a terse listing of its options; there is also a man
+page.
+
 <h2>h5tov5d</h2>
 
 <p><code>h5tov5d</code> is a program to convert multidimensional HDF5
