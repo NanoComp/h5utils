@@ -1,12 +1,13 @@
 COLORMAPS = colormaps/autumn colormaps/bluered colormaps/bone		\
 colormaps/colorcube colormaps/cool colormaps/copper colormaps/flag	\
-colormaps/gray colormaps/hot colormaps/hsv colormaps/jet		\
-colormaps/lines colormaps/pink colormaps/prism colormaps/spring		\
-colormaps/summer colormaps/vga colormaps/winter
+colormaps/gray colormaps/green colormaps/hot colormaps/hsv		\
+colormaps/jet colormaps/lines colormaps/pink colormaps/prism		\
+colormaps/spring colormaps/summer colormaps/vga colormaps/winter	\
+colormaps/yarg colormaps/yellow
 
 EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS)
 
-noinst_PROGRAMS = h5fromitxt
+noinst_PROGRAMS = h5fromitxt # quick hack, not really supported
 bin_PROGRAMS = h5totxt h5fromtxt h5tovtk @MORE_H5UTILS@
 EXTRA_PROGRAMS = h5topng h5tov5d h5fromh4
 
