@@ -45,7 +45,7 @@ static void convert_row(int png_width, int data_width,
 	  REAL y = i * scaley + offsety;
 	  int n = (int) (y + 0.5);
 	  double delta = y - n;
-	  REAL val, maskweight;
+	  REAL val, maskweight = 0.0;
 
 	  if (n < 0 || n > data_width) {
 	       row_pointer[i] = 255;
@@ -136,7 +136,6 @@ void writepng(char *filename,
 	      int invert,
 	      colormap_t colormap)
 {
-     int bit_depth;
      FILE *fp;
      png_structp png_ptr;
      png_infop info_ptr;
