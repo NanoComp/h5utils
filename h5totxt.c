@@ -39,7 +39,7 @@ void usage(FILE *f)
 	     "         -h : this help message\n"
              "         -V : print version number and copyright\n"
 	     "         -v : verbose output\n"
-	     "   -s <sep> : use <sep> to separate columns [ default: "," ]\n"
+	     "   -s <sep> : use <sep> to separate columns [ default: \",\" ]\n"
 	     "  -o <file> : output to <file> (first input file only)\n"
 	     "    -x <ix> : take x=<ix> slice of data\n"
 	     "    -y <iy> : take y=<iy> slice of data\n"
