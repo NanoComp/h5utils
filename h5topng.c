@@ -345,6 +345,9 @@ int main(int argc, char **argv)
 		   return EXIT_FAILURE;
 	  }
 
+     CHECK(!overlay_fname || !eight_bit,
+	   "-8 option is not currently supported with -A");
+
      cmap = get_cmap(colormap, invert, 1.0, verbose);
      if (overlay_fname)
 	  overlay_cmap = get_cmap(overlay_colormap, overlay_invert,
