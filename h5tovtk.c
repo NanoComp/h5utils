@@ -196,6 +196,9 @@ int main(int argc, char **argv)
 		   islice[3] = atoi(optarg);
 		   slicedim[3] = LAST_SLICE_DIM;
 		   break;
+              case '0':
+                   center_slice[0] = center_slice[1] = center_slice[2] = 1;
+                   break;
 	      case 'n':
 		   fix_byte_order = 0;
 		   break;
