@@ -29,9 +29,9 @@ h5totxt \- generate comma-delimited text from 2d slices of HDF5 files
 .PP
 ." Add any additional description here
 h5totxt is a utility to generate comma-delimited text (and similar
-formats) from two-dimensional slices of numeric datasets in HDF5
-files.  This way, the data can easily be imported into spreadsheets
-and similar programs for analysis and visualization.
+formats) from one-, two-, or more-dimensional slices of numeric
+datasets in HDF5 files.  This way, the data can easily be imported
+into spreadsheets and similar programs for analysis and visualization.
 
 HDF5 is a free, portable binary format and supporting library developed
 by the National Center for Supercomputing Applications at the University
@@ -43,12 +43,20 @@ takes the first dataset, but this can be changed via the
 .B -d
 option, or by using the syntax \fIHDF5FILE:DATASET\fR.
 
-For a three-dimensional data set, the xy slice at z index zero is extracted
-by default, but other slices can be extracted using the
-.B -xyz
-options.  The most basic usage is something like
-\'h5totxt foo.h5\', which will output comma-delimited text to stdout
-from the data in foo.h5.
+By default, the entire dataset is dumped to the output.  in row-major
+order.  For 3d datasets, this corresponds to a sequence of yz slices,
+in order of increasing x, separated by blank lines.  If
+.B -T
+is specified, outputs in the transposed (column-major) order instead
+
+Often, however, you want only a one- or two-dimensional slice of
+multi-dimensional data.  To do this, you specify coordinates in one or
+more slice dimensions, via the
+.B -xyzt
+options.
+
+The most basic usage is something like \'h5totxt foo.h5\', which will
+output comma-delimited text to stdout from the data in foo.h5.
 .SH OPTIONS
 .TP
 .B -h
@@ -70,36 +78,30 @@ Use the string
 .I sep
 to separate columns of the output rather than a comma (the default).
 .TP
-\fB\-x\fR \fIix\fR, \fB\-y\fR \fIiy\fR, \fB\-z\fR \fIiz\fR
+\fB\-x\fR \fIix\fR, \fB\-y\fR \fIiy\fR, \fB\-z\fR \fIiz\fR, \fB\-t\fR \fIit\fR
 This tells
 .I h5totxt
-to use a particular slice of a two- or three-dimensional dataset.  e.g.
+to use a particular slice of a multi-dimensional dataset.  e.g.
 .B -x
-causes a yz plane to be used at an x index of
+causes a yz plane (of a 3d dataset) to be used, at an x index of
 .I ix
 (where the indices run from zero to one less than the maximum index in
-that direction).  The default behaviour is equivalent to
-.B -z
-0.  See also the
+that direction).  Here, x/y/z correspond to the first/second/third
+dimensions of the HDF5 dataset. The \fB\-t\fR option specifies a slice
+in the last dimension, whichever that might be.  See also the
 .B -0
-option to shift the origin of the slice coordinates to the dataset center.
+option to shift the origin of the x/y/z slice coordinates to the
+dataset center.
 .TP
 .B -0
-Shift the origin of the slice coordinates to the dataset center, so
-that e.g. -0 -x 0 (or more compactly -0x0) returns the central x plane
-of the dataset instead of the edge x plane.
+Shift the origin of the x/y/z slice coordinates to the dataset center,
+so that e.g. -0 -x 0 (or more compactly -0x0) returns the central x
+plane of the dataset instead of the edge x plane.  (\fB\-t\fR
+coordinates are not affected.)
 .TP
 .B -T
-Transpose the data (interchange the image axes).  By default, no
+Transpose the data (interchange the dimension ordering).  By default, no
 transposition is done.
-.TP
-.B -a
-Output the entire dataset, not just a slice.  By default, outputs in
-row-major order.  For 3d datasets, this corresponds to a sequence of
-yz slices, in order of increasing x, separated by blank lines.  If
-.B -T
-is specified, outputs in the transposed (column-major) order instead
-(not supported for datasets with more than three dimensions).
 .TP
 \fB\-.\fR \fInumdigits\fR
 Output

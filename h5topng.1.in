@@ -43,13 +43,14 @@ takes the first dataset, but this can be changed via the
 .B -d
 option, or by using the syntax \fIHDF5FILE:DATASET\fR.
 
-For a three-dimensional data set, the xy slice at z index zero is extracted
-by default, but other slices can be extracted using the
-.B -xyz
+For a three- or four-dimensional dataset you must specify coordinates
+in one or two slice dimensions, respectively, to get a two-dimensional
+slice, via the
+.B -xyzt
 options.  Yet more options control things like the colormap and
 magnification.  Still, the most basic usage is something like
-\'h5topng foo.h5\', which will output a file foo.png containing an image
-from the data in foo.h5.
+\'h5topng foo.h5\', which will output a file foo.png containing an
+image from the two-dimensional data in foo.h5.
 .SH OPTIONS
 .TP
 .B -h
@@ -69,27 +70,29 @@ Send PNG output to
 .I file
 rather than to the filename with .h5 replaced with .png (the default).
 .TP
-\fB\-x\fR \fIix\fR, \fB\-y\fR \fIiy\fR, \fB\-z\fR \fIiz\fR
+\fB\-x\fR \fIix\fR, \fB\-y\fR \fIiy\fR, \fB\-z\fR \fIiz\fR, \fB\-t\fR \fIit\fR
 This tells
 .I h5topng
-to use a particular slice of a two- or three-dimensional dataset.  e.g.
+to use a particular slice of a multi-dimensional dataset.  e.g.
 .B -x
-causes a yz plane to be used at an x index of
+causes a yz plane (of a 3d dataset) to be used, at an x index of
 .I ix
 (where the indices run from zero to one less than the maximum index in
-that direction).  The default behaviour is equivalent to
-.B -z
-0.  See also the
+that direction).  Here, x/y/z correspond to the first/second/third
+dimensions of the HDF5 dataset. The \fB\-t\fR option specifies a slice
+in the last dimension, whichever that might be.  See also the
 .B -0
-option to shift the origin of the slice coordinates to the dataset center.
+option to shift the origin of the x/y/z slice coordinates to the
+dataset center.
 .TP
 .B -0
-Shift the origin of the slice coordinates to the dataset center, so
-that e.g. -0 -x 0 (or more compactly -0x0) returns the central x plane
-of the dataset instead of the edge x plane.
+Shift the origin of the x/y/z slice coordinates to the dataset center,
+so that e.g. -0 -x 0 (or more compactly -0x0) returns the central x
+plane of the dataset instead of the edge x plane.  (\fB\-t\fR
+coordinates are not affected.)
 .TP
 \fB\-X\fR \fIscalex\fR, \fB\-Y\fR \fIscaley\fR, \fB\-S\fR \fIscale\fR
-Scale the x and y dimensions by
+Scale the x and y dimensions of the image by
 .I scalex
 and
 .I scaley
@@ -108,8 +111,10 @@ the leftover space in the (square) image filled with either black or white
 pixels, depending upon the color map.
 .TP
 .B -T
-Transpose the data (interchange the image axes).  By default, no
-transposition is done.
+Transpose the data (interchange the image axes).  By default,
+the first (x) coordinate of the data corresponds to the columns,
+and the second (y) coordinate corresponds to the rows; transposition
+reverses this convention.
 .TP
 .B -c \fIcolormap\fR
 Use a color map 
@@ -139,11 +144,17 @@ zero.
 A color-map file is a sequence of whitespace-separated R G B A
 quadruples, where each value is in the range 0.0 to 1.0 and indicates
 the fraction of red/green/blue/alpha.  (An alpha of 0 is transparent
-and of 1 is opaque.)  The colors in the color map are linearly
-interpolated as necessary to provide an 8-bit color palette.
+and of 1 is opaque; this is only used for the \fB\-a\fR option,
+below.)  The colors in the color map are linearly interpolated as
+necessary to provide an 8-bit color palette.
 .TP
 .B -r
-Reverse the ordering of the color map.
+Reverse the ordering of the color map.  You can also accomplish this
+by putting a "-" before the colormap name in the 
+.B -c
+or
+.B -a
+option.
 .TP
 .B -Z
 Center the color scale on the value zero in the data.
@@ -182,6 +193,28 @@ to specify a particular dataset within the file.  The contour outlines
 are around a value of
 .I val
 (defaults to middle of value range in \fIfile\fR).
+.TP
+\fB\-A\fR \fIfile\fR, \fB\-a\fR \fIcolormap\fR:\fIopacity\fR
+Translucently overlay the data from the first dataset in the
+.I file
+HDF5 file, which should have the same dimensions as the input
+dataset, on all of the output images, using the colormap
+.I colormap
+with opacity (from 0 for completely transparent to 1 for completely opaque)
+.I opacity
+multiplied by the opacity values in the colormap.
+You can use the syntax
+.I file:dataset
+to specify a particular dataset within the file.
+
+Some predefined colormaps that work particularly well for this feature
+are \fB\yellow\fR (transparent white to opaque yellow) \fB\gray\fR
+(transparent white to opaque black), \fB\yarg\fR (transparent black to
+opaque white), \fB\green\fR (transparent white to opaque green), and
+\fB\bluered\fR (opaque blue to transparent white to opaque red).  You
+can prepend "-" to the colormap name to reverse the colormap order.
+(See also \fB\-c\fR, above.)  The default for \fB\-a\fR is yellow:0.3
+(yellow colormap multiplied by 30% opacity).
 .TP
 \fB\-d\fR \fIname\fR
 Use dataset

@@ -48,7 +48,12 @@ option, or by using the syntax \fIHDF5FILE:DATASET\fR.
 are converted into a time series of 3d datasets, with the first
 dimension marking the time.  5d datasets are converted into several
 variables of time series of 3d datasets, with the first dimension as
-the variable index and the second dimension as the time.
+the variable index and the second dimension as the time.  Often,
+however, you want only a three-dimensional "slice" of four (or more)
+dimensional data.  To do this, you specify coordinates in one (or
+more) slice dimension(s), via the
+.B -xyzt
+options.
 
 A typical invocation is of the form
 \'h5tov5d foo.h5\', which will output a Vis5d data file foo.v5d
@@ -94,6 +99,27 @@ will use 4-byte floating-point numbers for an "exact" representation.
 In most circumstances,
 .B -1
 is more than adequate for data visualization purposes.
+.TP
+\fB\-x\fR \fIix\fR, \fB\-y\fR \fIiy\fR, \fB\-z\fR \fIiz\fR, \fB\-t\fR \fIit\fR
+This tells
+.I h5tovtk
+to use a particular slice of a multi-dimensional dataset.  e.g.
+.B -x
+uses the subset (with one less dimension) at an x index of
+.I ix
+(where the indices run from zero to one less than the maximum index in
+that direction).  Here, x/y/z correspond to the first/second/third
+dimensions of the HDF5 dataset. The \fB\-t\fR option specifies a slice
+in the last dimension, whichever that might be.  See also the
+.B -0
+option to shift the origin of the x/y/z slice coordinates to the
+dataset center.
+.TP
+.B -0
+Shift the origin of the x/y/z slice coordinates to the dataset center,
+so that e.g. -0 -x 0 (or more compactly -0x0) returns the central x
+plane of the dataset instead of the edge x plane.  (\fB\-t\fR
+coordinates are not affected.)
 .TP
 \fB\-d\fR \fIname\fR
 Use dataset

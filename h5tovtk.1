@@ -74,6 +74,14 @@ numbers of datasets are combined into a VTK field dataset.
 Otherwise, the default behavior is to save each dataset to a separate
 VTK file, with the .h5 suffix of the input filename replaced by .vtk
 in the output filename.
+
+Only three-dimensional datasets may be written to the VTK file.  If
+you have a four (or more) dimensional data set, then you must take a
+three-dimensional "slice" of the multi-dimensional data.  To do this,
+you specify coordinates in one (or more) slice dimension(s), via the
+.B -xyzt
+options.
+.SH OPTIONS
 .TP
 \fB\-1\fR, \fB\-2\fR, \fB\-4\fR
 Use 1 , 2, or 4 bytes to store each data point in the
@@ -138,6 +146,27 @@ output, center the linear integer scale on the value zero in the data.
 .TP
 .B -r
 Invert the output values (map the minimum to the maximum and vice versa).
+.TP
+\fB\-x\fR \fIix\fR, \fB\-y\fR \fIiy\fR, \fB\-z\fR \fIiz\fR, \fB\-t\fR \fIit\fR
+This tells
+.I h5tovtk
+to use a particular slice of a multi-dimensional dataset.  e.g.
+.B -x
+uses the subset (with one less dimension) at an x index of
+.I ix
+(where the indices run from zero to one less than the maximum index in
+that direction).  Here, x/y/z correspond to the first/second/third
+dimensions of the HDF5 dataset. The \fB\-t\fR option specifies a slice
+in the last dimension, whichever that might be.  See also the
+.B -0
+option to shift the origin of the x/y/z slice coordinates to the
+dataset center.
+.TP
+.B -0
+Shift the origin of the x/y/z slice coordinates to the dataset center,
+so that e.g. -0 -x 0 (or more compactly -0x0) returns the central x
+plane of the dataset instead of the edge x plane.  (\fB\-t\fR
+coordinates are not affected.)
 .TP
 \fB\-d\fR \fIname\fR
 Use dataset
