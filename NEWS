@@ -1,3 +1,9 @@
+h5utils 1.2.2: (1/12/00)
+
+  * Makefile now includes CPPFLAGS in the compiler flags, making it
+    easier to use header files in non-standard locations.  (CPPFLAGS
+    is the proper place to put -I flags for the configure script.)
+
 h5utils 1.2.1:  (1/1/00)
 
   * Modified -o option of h5tov5d to join datasets into a single Vis5d file.

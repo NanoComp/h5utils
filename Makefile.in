@@ -1,5 +1,6 @@
 CC = @CC@
 CFLAGS = @CFLAGS@
+CPPFLAGS = @CPPFLAGS@
 DEFS = @DEFS@
 LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
@@ -53,7 +54,7 @@ h5tov5d.o: h5tov5d.c
 	$(CC) -c $(DEFS) $(V5D_INCLUDES) $(CFLAGS) $< -o $@
 
 .c.o:
-	$(CC) -c $(DEFS) $(CFLAGS) $< -o $@
+	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 ###########################################################################
 
