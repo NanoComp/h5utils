@@ -114,23 +114,26 @@ instead of the default color map
 is normally one of the colormap files provided with 
 .I h5topng
 (in the @datadir_val@/h5utils/colormaps directory), or can be the name
-of a color map file.  A color map file is a sequence of
-whitespace-separated R G B triples, where each value is in the range
-0.0 to 1.0 and indicates the fraction of red/green/blue.  The colors
-in the color map are linearly interpolated as necessary to provide an
-8-bit color palette.
+of a color map file.
 
-Two useful alternate color maps are
+Three useful included color maps are
 .B hot
-(black-red-yellow-white) and
+(black-red-yellow-white, useful for intensity data),
 .B bluered
-(blue-white-red).  If you use the
+(blue-white-red, useful for signed data), and
+.B hsv
+(a multi-color "rainbow").  If you use the
 .B bluered
 color map for data with positive and negative values, you may also want
 to use the
 .B -Z
 option so that the center of the color scale (white) corresponds to
 zero.
+
+A color map file is a sequence of whitespace-separated R G B triples,
+where each value is in the range 0.0 to 1.0 and indicates the fraction
+of red/green/blue.  The colors in the color map are linearly
+interpolated as necessary to provide an 8-bit color palette.
 .TP
 .B -r
 Reverse the ordering of the color map.
