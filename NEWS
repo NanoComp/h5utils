@@ -8,6 +8,9 @@ h5utils 1.7 (not yet released)
   * New -R option for h5topng to use a consistent color scale for
     all specified files.
 
+  * New -0 option for h5topng and h5totxt that shifts the origin of the
+    slice coordinates to the dataset center.
+
   * Added h5tovtk program to output VTK (Visualization ToolKit) data files.
 
   * Support -T (transpose dimensions) option in h5tov5d.

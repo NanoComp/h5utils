@@ -79,7 +79,14 @@ causes a yz plane to be used at an x index of
 (where the indices run from zero to one less than the maximum index in
 that direction).  The default behaviour is equivalent to
 .B -z
-0.
+0.  See also the
+.B -0
+option to shift the origin of the slice coordinates to the dataset center.
+.TP
+.B -0
+Shift the origin of the slice coordinates to the dataset center, so
+that e.g. -0 -x 0 (or more compactly -0x0) returns the central x plane
+of the dataset instead of the edge x plane.
 .TP
 \fB\-X\fR \fIscalex\fR, \fB\-Y\fR \fIscaley\fR, \fB\-S\fR \fIscale\fR
 Scale the x and y dimensions by

@@ -137,7 +137,7 @@ void output_v5d(char *v5d_fname, char *data_label,
 	  int err;
 	  fname = split_fname(h5_fnames[ifile], &data_name);
 	  if (!data_name[0]) data_name = data_label;
-	  err = arrayh5_read(&a, fname, data_name, NULL, -1, 0);
+	  err = arrayh5_read(&a, fname, data_name, NULL, -1, 0, 0);
 	  free(fname);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
@@ -203,7 +203,7 @@ void output_v5d(char *v5d_fname, char *data_label,
 		    /* we don't really have to read the whole array;
 		       if we called HDF5 routines directly, we could just
 		       get the dimensions...oh well */
-		    err = arrayh5_read(&a, fname, data_name, NULL, -1, 0);
+		    err = arrayh5_read(&a, fname, data_name, NULL, -1, 0, 0);
 		    CHECK(!err, arrayh5_read_strerror[err]);
 		    free(fname);
 		    
@@ -228,7 +228,7 @@ void output_v5d(char *v5d_fname, char *data_label,
 	       /* read first array back in */
 	       fname = split_fname(h5_fnames[ifile], &data_name);
 	       if (!data_name[0]) data_name = data_label;
-	       err = arrayh5_read(&a, fname, data_name, NULL, -1, 0);
+	       err = arrayh5_read(&a, fname, data_name, NULL, -1, 0, 0);
 	       CHECK(!err, arrayh5_read_strerror[err]);
 	       free(fname);
 	  }

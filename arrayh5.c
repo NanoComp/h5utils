@@ -184,7 +184,7 @@ const char arrayh5_read_strerror[][100] = {
 
 int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 		 char **dataname,
-		 int slicedim, int islice)
+		 int slicedim, int islice, int center_slice)
 {
      hid_t file_id = -1, data_id = -1, space_id = -1;
      char *dname = NULL;
@@ -247,56 +247,60 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	       goto done;
 	  }
      }
-     else if (slicedim < rank && islice >= 0 && islice < dims[slicedim]) {
-	  hssize_t *start;
-	  hsize_t *count, *count2;
-	  hid_t mem_space_id;
-	  herr_t readerr;
-
-	  CHK_MALLOC(start, hssize_t, rank);
-	  CHK_MALLOC(count, hsize_t, rank);
-	  CHK_MALLOC(count2, hsize_t, rank);
-
-	  for (i = 0; i < rank; ++i) {
-	       count[i] = dims[i];
-	       count2[i] = dims[i];
-	       start[i] = 0;
-	  }
-	  start[slicedim] = islice;
-	  count[slicedim] = 1;
-
-	  H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
-			      start, NULL, count, NULL);
-
-	  for (i = slicedim; i + 1 < rank; ++i)
-	       count2[i] = dims[i] = dims[i + 1];
-	  start[slicedim] = 0;
-	  rank = rank - 1;
-	  if (rank == 0) {
-	       rank = 1;
-	       count2[0] = dims[0] = 1;
-	       *a = arrayh5_create(0, dims);
-	  }
-	  else
-	       *a = arrayh5_create(rank, dims);
-	  free(dims);
-
-	  mem_space_id = H5Screate_simple(rank, count2, NULL);
-	  H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-			      start, NULL, count2, NULL);
-
-	  readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE, 
-			    mem_space_id, space_id, 
-			    H5P_DEFAULT, (void *) a->data);
-
-	  H5Sclose(mem_space_id);
-	  free(count2);
-	  free(count);
-	  free(start);
-	  
-	  if (readerr < 0) {
-	       err = 4;
-	       goto done;
+     else if (slicedim < rank) {
+	  if (center_slice)
+	       islice += dims[slicedim] / 2;
+	  if (islice >= 0 && islice < dims[slicedim]) {
+	       hssize_t *start;
+	       hsize_t *count, *count2;
+	       hid_t mem_space_id;
+	       herr_t readerr;
+	       
+	       CHK_MALLOC(start, hssize_t, rank);
+	       CHK_MALLOC(count, hsize_t, rank);
+	       CHK_MALLOC(count2, hsize_t, rank);
+	       
+	       for (i = 0; i < rank; ++i) {
+		    count[i] = dims[i];
+		    count2[i] = dims[i];
+		    start[i] = 0;
+	       }
+	       start[slicedim] = islice;
+	       count[slicedim] = 1;
+	       
+	       H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
+				   start, NULL, count, NULL);
+	       
+	       for (i = slicedim; i + 1 < rank; ++i)
+		    count2[i] = dims[i] = dims[i + 1];
+	       start[slicedim] = 0;
+	       rank = rank - 1;
+	       if (rank == 0) {
+		    rank = 1;
+		    count2[0] = dims[0] = 1;
+		    *a = arrayh5_create(0, dims);
+	       }
+	       else
+		    *a = arrayh5_create(rank, dims);
+	       free(dims);
+	       
+	       mem_space_id = H5Screate_simple(rank, count2, NULL);
+	       H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+				   start, NULL, count2, NULL);
+	       
+	       readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE, 
+				 mem_space_id, space_id, 
+				 H5P_DEFAULT, (void *) a->data);
+	       
+	       H5Sclose(mem_space_id);
+	       free(count2);
+	       free(count);
+	       free(start);
+	       
+	       if (readerr < 0) {
+		    err = 4;
+		    goto done;
+	       }
 	  }
      }
      else {

@@ -44,6 +44,7 @@ void usage(FILE *f)
 	     "    -x <ix> : take x=<ix> slice of data\n"
 	     "    -y <iy> : take y=<iy> slice of data\n"
 	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
+	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "         -T : transpose the data [default: no]\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n"
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
      extern char *optarg;
      extern int optind;
      int c;
-     int slicedim = 2, islice = 0;
+     int slicedim = 2, islice = 0, center_slice = 0;
      int err;
      int nx, ny;
      int verbose = 0;
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
      CHECK(sep, "out of memory");
      strcpy(sep, ",");
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:d:vTs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:0d:vTs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -109,6 +110,9 @@ int main(int argc, char **argv)
 	      case 'v':
 		   verbose = 1;
 		   break;
+              case '0':
+                   center_slice = 1;
+                   break;
 	      case 'T':
 		   transpose = 1;
 		   break;
@@ -165,7 +169,8 @@ int main(int argc, char **argv)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
 		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, h5_fname, dname, NULL, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, dname, NULL,
+			     slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  

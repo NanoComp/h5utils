@@ -44,7 +44,8 @@ extern void arrayh5_getrange(arrayh5 a, double *min, double *max);
 
 extern const char arrayh5_read_strerror[][100];
 extern int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
-			char **dataname, int slicedim, int islice);
+			char **dataname,
+			int slicedim, int islice, int center_slice);
 extern void arrayh5_write(arrayh5 a, char *filename, char *dataname,
 			  short append_data);
 

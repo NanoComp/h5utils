@@ -289,7 +289,7 @@ int main(int argc, char **argv)
           if (!dname[0])
                dname = data_name;
 
-	  err = arrayh5_read(&a[ia], h5_fname, dname, &found_dname, -1, 0);
+	  err = arrayh5_read(&a[ia], h5_fname, dname, &found_dname, -1, 0, 0);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a[ia].rank >= 1, "data must have at least one dimension");
 	  

@@ -49,6 +49,7 @@ void usage(FILE *f)
 	     "    -x <ix> : take x=<ix> slice of data\n"
 	     "    -y <iy> : take y=<iy> slice of data\n"
 	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
+	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "    -X <sx> : scale width by <sx> [ default: 1.0 ]\n"
 	     "    -Y <sy> : scale height by <sy> [ default: 1.0 ]\n"
 	     "     -S <s> : equivalent to -X <s> -Y <s>\n"
@@ -151,7 +152,7 @@ int main(int argc, char **argv)
      extern char *optarg;
      extern int optind;
      int c;
-     int slicedim = 2, islice = 0;
+     int slicedim = 2, islice = 0, center_slice = 0;
      int err;
      int nx, ny;
      char *colormap = NULL, *cmap_fname = NULL;
@@ -169,7 +170,7 @@ int main(int argc, char **argv)
      CHECK(colormap, "out of memory");
      strcpy(colormap, CMAP_DEFAULT);
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:c:m:M:RC:b:d:vX:Y:S:TrZs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:0c:m:M:RC:b:d:vX:Y:S:TrZs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -183,6 +184,9 @@ int main(int argc, char **argv)
 		   break;
 	      case 'T':
 		   transpose = 1;
+		   break;
+	      case '0':
+		   center_slice = 1;
 		   break;
 	      case 'r':
 		   invert = 1;
@@ -312,7 +316,7 @@ int main(int argc, char **argv)
 	  if (verbose)
 	       printf("reading contour data from \"%s\".\n", fname);
 	  err = arrayh5_read(&contour_data, fname, dname, NULL,
-			     slicedim, islice);
+			     slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(contour_data.rank >= 1,
 		"data must have at least one dimension");
@@ -342,7 +346,8 @@ int main(int argc, char **argv)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
 		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, h5_fname, dname, NULL, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, dname, NULL,
+			     slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  
