@@ -36,7 +36,7 @@ octdir = @OCT_INSTALL_DIR@
 oct_DATA = @H5READ@
 
 h5read.oct: h5read.cc arrayh5.h arrayh5.o
-	mkoctfile $(DEFS) $(CPPFLAGS) h5read.cc arrayh5.o $(LDFLAGS) $(LIBS)
+	mkoctfile $(DEFS) $(CPPFLAGS) $(srcdir)/h5read.cc arrayh5.o $(LDFLAGS) $(LIBS)
 
 clean-hook:
 	rm -f h5read.oct
