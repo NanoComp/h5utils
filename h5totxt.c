@@ -47,6 +47,8 @@ void usage(FILE *f)
 	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
 	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "         -T : transpose the data [default: no]\n"
+	     "         -a : output entire dataset, not just a slice\n"
+	     "     -. <n> : output <n> decimal places [ default: 16 ]\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n"
 	  );
@@ -61,7 +63,8 @@ int main(int argc, char **argv)
      int c;
      int slicedim = 2, islice = 0, center_slice = 0;
      int err;
-     int nx, ny;
+     int nx, ny, nz;
+     int dec = 16;
      int verbose = 0;
      int transpose = 0;
      char *sep;
@@ -71,7 +74,7 @@ int main(int argc, char **argv)
      CHECK(sep, "out of memory");
      strcpy(sep, ",");
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:0d:vTs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:0ad:vTs:.:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -110,6 +113,9 @@ int main(int argc, char **argv)
 		   CHECK(data_name, "out of memory");
 		   strcpy(data_name, optarg);
 		   break;		   
+	      case '.':
+		   dec = atoi(optarg);
+		   break;
 	      case 'x':
 		   islice = atoi(optarg);
 		   slicedim = 0;
@@ -121,6 +127,10 @@ int main(int argc, char **argv)
 	      case 'z':
 		   islice = atoi(optarg);
 		   slicedim = 2;
+		   break;
+	      case 'a':
+		   islice = 0;
+		   slicedim = -1;
 		   break;
 	      default:
 		   fprintf(stderr, "Invalid argument -%c\n", c);
@@ -140,30 +150,34 @@ int main(int argc, char **argv)
 
 	  if (verbose)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
-		      h5_fname, islice, slicedim + 'x');
+		      h5_fname, islice, slicedim < 0 ? '*' : slicedim + 'x');
 	  
 	  err = arrayh5_read(&a, h5_fname, dname, NULL,
 			     slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
+	  CHECK(a.rank <= 3 || !transpose,
+		"transposing dimensions > 3 is not supported");
 	  
 	  {
 	       double a_min, a_max;
 	       arrayh5_getrange(a, &a_min, &a_max);
 	       if (verbose)
-		    printf("data ranges from %g to %g.\n", a_min, a_max);
+		    printf("data ranges from %.*g to %.*g.\n",
+			   dec, a_min, dec, a_max);
 	  }
 	  
 	  nx = a.dims[0];
 	  ny = a.rank < 2 ? 1 : a.dims[1];
+	  nz = a.rank < 3 ? 1 : a.dims[2];
 	  
-	  if (verbose)
-	       printf("writing %s from %dx%d input data.\n",
-		      txt_fname ? txt_fname : "to stdout", nx, ny);
+	  if (verbose && a.rank <= 3)
+	       printf("writing %s from %dx%dx%d input data.\n",
+		      txt_fname ? txt_fname : "to stdout", nx, ny, nz);
 
 	  {
 	       FILE *f;
-	       int i, j;
+	       int i, j, k, nyz = ny * nz;
 
 	       if (txt_fname) {
 		    f = fopen(txt_fname, "w");
@@ -172,22 +186,50 @@ int main(int argc, char **argv)
 	       else
 		    f = stdout;
 	       
-	       if (transpose)
-		    for (j = 0; j < ny; ++j) {
-			 if (nx > 0)
-			      fprintf(f, "%g", a.data[0*ny + j]);
-			 for (i = 1; i < nx; ++i)
-			      fprintf(f, "%s%g", sep, a.data[i*ny + j]);
-			 fprintf(f, "\n");
+	       if (transpose && a.rank <= 3)
+		    for (k = 0; k < nz; ++k) {
+			 if (k > 0)
+			      fprintf(f, "\n");
+			 for (j = 0; j < ny; ++j) {
+			      int jk = nz * j + k;
+			      if (nx > 0)
+				   fprintf(f, "%.*g", dec, a.data[0*nyz + jk]);
+			      for (i = 1; i < nx; ++i)
+				   fprintf(f, "%s%.*g",
+					   sep, dec, a.data[i*nyz + jk]);
+			      fprintf(f, "\n");
+			 }
 		    }
-	       else
+	       else if (a.rank < 3)
 		    for (i = 0; i < nx; ++i) {
 			 if (ny > 0)
-			      fprintf(f, "%g", a.data[i*ny + 0]);
+			      fprintf(f, "%.*g", dec, a.data[i*ny + 0]);
 			 for (j = 1; j < ny; ++j)
-			      fprintf(f, "%s%g", sep, a.data[i*ny + j]);
+			      fprintf(f, "%s%.*g", sep, dec, a.data[i*ny + j]);
 			 fprintf(f, "\n");
 		    }
+	       else if (a.rank == 3)
+		    for (i = 0; i < nx; ++i) {
+			 if (i > 0)
+			      fprintf(f, "\n");
+			 for (j = 0; j < ny; ++j) {
+			      int ij = nz * (ny * i + j);
+			      if (nz > 0)
+				   fprintf(f, "%.*g", dec, a.data[ij + 0]);
+			      for (k = 1; k < nz; ++k)
+				   fprintf(f, "%s%.*g",
+					   sep, dec, a.data[ij + k]);
+			      fprintf(f, "\n");
+			 }
+		    }
+	       else {
+		    if (a.N > 0)
+			 fprintf(f, "%.*g", dec, a.data[0]);
+		    for (i = 0; i < a.N; ++i) {
+			 fprintf(f, "%s%.*g", sep, dec, a.data[i]);
+		    }
+		    fprintf(f, "\n");
+	       }
 
 	       if (txt_fname)
 		    fclose(f);

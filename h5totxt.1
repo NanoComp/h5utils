@@ -93,6 +93,19 @@ of the dataset instead of the edge x plane.
 Transpose the data (interchange the image axes).  By default, no
 transposition is done.
 .TP
+.B -a
+Output the entire dataset, not just a slice.  By default, outputs in
+row-major order.  For 3d datasets, this corresponds to a sequence of
+yz slices, in order of increasing x, separated by blank lines.  If
+.B -T
+is specified, outputs in the transposed (column-major) order instead
+(not supported for datasets with more than three dimensions).
+.TP
+\fB\-.\fR \fInumdigits\fR
+Output
+.I numdigits
+digits after the decimal point (defaults to 16).
+.TP
 \fB\-d\fR \fIname\fR
 Use dataset
 .I name
