@@ -167,7 +167,6 @@ int main(int argc, char **argv)
 	  err = arrayh5_read(&a, h5_fname, dname, NULL,
 			     4, slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
-	  CHECK(a.rank >= 1, "data must have at least one dimension");
 
 	  if (transpose)
 	       arrayh5_transpose(&a);
@@ -180,7 +179,7 @@ int main(int argc, char **argv)
 			   dec, a_min, dec, a_max);
 	  }
 	  
-	  nx = a.dims[0];
+	  nx = a.rank < 1 ? 1 : a.dims[0];
 	  ny = a.rank < 2 ? 1 : a.dims[1];
 	  nz = a.rank < 3 ? 1 : a.dims[2];
 	  

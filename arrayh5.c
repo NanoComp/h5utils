@@ -257,7 +257,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
      else if (nslicedims > 0) {
 	  int j, rank2 = rank;
 	  hssize_t *start;
-	  hsize_t *count, *count2;
+	  hsize_t *count;
 	  hid_t mem_space_id;
 	  herr_t readerr;
 
@@ -287,7 +287,6 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  
 	  CHK_MALLOC(start, hssize_t, rank);
 	  CHK_MALLOC(count, hsize_t, rank);
-	  CHK_MALLOC(count2, hsize_t, rank);
 	  
 	  for (i = 0; i < rank; ++i) {
 	       count[i] = dims[i];
@@ -301,28 +300,14 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
 			      start, NULL, count, NULL);
 
-	  for (i = j = 0; i < rank; ++i) {
-	       int k;
-	       for (k = 0; k < nslicedims && i != slicedim[k]; ++k)
-		    ;
-	       if (k == nslicedims) {
-		 count2[j++] = dims[i];
-		 rank2--;
-	       }
-	  }
+	  for (i = j = 0; i < rank; ++i)
+	       if (count[i] > 1)
+		    dims[j++] = count[i];
+	  rank2 = j;
 
-	  for (i = 0; i < rank2; ++i)
-	       dims[i] = count2[i];
-
-	  if (rank2 == 0) { /* HDF5 doesn't like rank 0 */
-	    rank2 = 1;
-	    dims[0] = count2[0] = 1;
-	    *a = arrayh5_create(0, dims);
-	  }
-	  else
-	    *a = arrayh5_create(rank, dims);
+	  *a = arrayh5_create(rank2, dims);
 	  
-	  mem_space_id = H5Screate_simple(rank2, count2, NULL);
+	  mem_space_id = H5Screate_simple(rank, count, NULL);
 	  H5Sselect_all(mem_space_id);
 	  
 	  readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE, 
@@ -330,7 +315,6 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 			    H5P_DEFAULT, (void *) a->data);
 	  
 	  H5Sclose(mem_space_id);
-	  free(count2);
 	  free(count);
 	  free(start);
 	  
