@@ -1,8 +1,15 @@
-h5utils 1.9 (mm/dd/yy)
+h5utils 1.9 (7/12/04)
 
   * Added new h5math utility, which creates and combines HDF5 datasets
     using a user-specified mathematical expression.  (Requires GNU
     libmatheval to be installed.)
+
+  * h5topng: Matlab-like start:end or start:step:end notation for
+    slice indices, to allow a whole sequence of slices to be output as
+    a sequence of PNG images.
+
+  * h5topng: if contour/overlay dataset does not have same dimensions
+    as output data, it is periodically "tiled" over the output.
 
 h5utils 1.8 (5/22/04)
 
