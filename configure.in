@@ -3,7 +3,7 @@ AC_INIT(h5topng.c)
 AC_CONFIG_HEADER(config.h)
 
 VERSION=1.5
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [h5utils version number string])
 AC_SUBST(VERSION)
 
 # Checks for programs.
@@ -51,6 +51,11 @@ AC_CHECK_LIB(jpeg, jpeg_start_compress,
 		H4_LIBS="-ldf -ljpeg"; H5FROMH4_TARGET=h5fromh4,
 		AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4]), -ljpeg),
 	AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4]))
+
+if test "x$H5FROMH4_TARGET" = xh5fromh4; then
+	AC_CHECK_HEADERS(hdf.h hdf/hdf.h)
+fi
+
 AC_SUBST(H5FROMH4_TARGET)
 AC_SUBST(H4_LIBS)
 
@@ -61,15 +66,20 @@ AC_CHECK_LIB(hdf5, H5Fopen, LIBS="-lhdf5 $LIBS",
 
 ###########################################################################
 
-H5READ_TARGET=h5read.oct
+AC_ARG_WITH(octave, [  --without-octave        don't compile h5read Octave plugin], ok=$withval, ok=yes)
+
+H5READ_TARGET=""
 OCT_INSTALL_DIR=""
 H5READ_INSTALL_TARGET=""
 H5READ_UNINSTALL_TARGET=""
+
+if test "x$ok" = xyes; then
 AC_CHECK_PROGS(MKOCTFILE, mkoctfile, echo)
 if test "$MKOCTFILE" = "echo"; then
 	AC_MSG_WARN([can't find mkoctfile: won't be able to compile h5read.oct])
-	H5READ_TARGET=""
 else
+	H5READ_TARGET=h5read.oct
+
 	# try to find installation directory
 	AC_CHECK_PROGS(OCTAVE, octave, echo)
 	AC_MSG_CHECKING(where octave plugins go)
@@ -81,6 +91,7 @@ else
 	else
 		AC_MSG_RESULT(unknown)
 	fi
+fi
 fi
 
 AC_SUBST(H5READ_TARGET)
@@ -97,6 +108,7 @@ V5D_INCLUDES=""
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(v5d, v5dCreate, V5D_FILES="-lv5d"; H5TOV5D_TARGET=h5tov5d)
 	AC_CHECK_HEADERS(vis5d/v5d.h)
+	AC_CHECK_HEADER(vis5d+/v5d.h, AC_DEFINE(HAVE_VIS5Dp_V5D_H, 1, [Define if you have the <vis5d+/v5d.h> header file.]))
 elif test "$ok" != "no"; then
 	AC_MSG_CHECKING(for Vis5d object files and headers)
 	if test -r "$ok/src/v5d.o" -a -r "$ok/src/binio.o" -a -r "$ok/src/v5d.h" -a -r "$ok/src/binio.h"; then

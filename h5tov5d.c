@@ -29,7 +29,9 @@
 #include "arrayh5.h"
 
 /* Vis5d header files: */
-#ifdef HAVE_VIS5D_V5D_H
+#if defined(HAVE_VIS5Dp_V5D_H)
+#  include <vis5d+/v5d.h>
+#elif defined(HAVE_VIS5D_V5D_H)
 #  include <vis5d/v5d.h>
 #else
 #  include <v5d.h>

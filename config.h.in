@@ -1,8 +1,0 @@
-/* config.h.in: preprocessor definitions output by the configure
-                script to produce config.h */
-
-/* define this to the version string */
-#undef VERSION
-
-/* define if you have <vis5d/v5d.h> */
-#undef HAVE_VIS5D_V5D_H

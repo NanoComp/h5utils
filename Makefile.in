@@ -148,4 +148,4 @@ distclean: clean
 	rm -f config.cache Makefile config.log config.status config.h $(TARGETS)
 
 maintainer-clean: distclean
-	rm -f configure
+	rm -f configure config.h.in

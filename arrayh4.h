@@ -23,7 +23,11 @@
 #ifndef ARRAYH4_H
 #define ARRAYH4_H
 
-#include <hdf.h>
+#if defined(HAVE_HDF_H)
+#  include <hdf.h>
+#elif defined(HAVE_HDF_HDF_H)
+#  include <hdf/hdf.h>
+#endif
 
 #define ARRAYH4_MAX_RANK 10
 
