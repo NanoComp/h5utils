@@ -94,12 +94,6 @@ int main(int argc, char **argv)
      int verbose = 0;
      int transpose = 0;
      int append = 0;
-     char *sep;
-     
-
-     sep = (char*) malloc(sizeof(char) * 2);
-     CHECK(sep, "out of memory");
-     strcpy(sep, ",");
 
      while ((c = getopt(argc, argv, "hn:d:vTaV")) != -1)
 	  switch (c) {
