@@ -5,7 +5,8 @@ LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
 INSTALL = @INSTALL@
 prefix = @prefix@
-transform=@program_transform_name@  # c.f. AC_ARG_PROGRAM autoconf docs
+# c.f. AC_ARG_PROGRAM autoconf docs:
+transform=@program_transform_name@
 @SET_MAKE@
 
 VERSION = @VERSION@
@@ -20,7 +21,9 @@ H5TOPNG_TARGET = @H5TOPNG_TARGET@
 H5READ_TARGET = @H5READ_TARGET@
 PNG_LIBS = @PNG_LIBS@
 
-TARGETS = $(H5TOPNG_TARGET) $(H5READ_TARGET) h5totxt
+TARGETS =  h5totxt $(H5TOPNG_TARGET) $(H5READ_TARGET)
+INSTALL_TARGETS = $(TARGETS:%=%-install)
+UNINSTALL_TARGETS = $(TARGETS:%=%-uninstall)
 
 all: $(TARGETS)
 
@@ -36,17 +39,35 @@ h5totxt: $(OBJ_h5totxt)
 .c.o:
 	$(CC) -c $(DEFS) $(CFLAGS) $< -o $@
 
-install: $(H5TOPNG_TARGET) h5totxt
+h5topng-install:
 	$(INSTALL) -d $(prefix)/bin
 	$(INSTALL) -d $(prefix)/man/man1
 	$(INSTALL) -m 0755 -s h5topng $(prefix)/bin/`echo h5topng|sed '$(transform)'`
-	$(INSTALL) -m 0755 -s h5totxt $(prefix)/bin/`echo h5totxt|sed '$(transform)'`
 	$(INSTALL) -m 0644 h5topng.1 $(prefix)/man/man1
+
+h5topng-uninstall:
+	rm -f $(prefix)/bin/h5topng
+	rm -f $(prefix)/man/man1/h5topng.1
+
+h5totxt-install:
+	$(INSTALL) -d $(prefix)/bin
+	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -m 0755 -s h5totxt $(prefix)/bin/`echo h5totxt|sed '$(transform)'`
 	$(INSTALL) -m 0644 h5totxt.1 $(prefix)/man/man1
 
-uninstall:
-	rm -f $(prefix)/bin/h5topng
+h5totxt-uninstall:
 	rm -f $(prefix)/bin/h5totxt
+	rm -f $(prefix)/man/man1/h5totxt.1
+
+h5read.oct-install:
+	@echo "h5read.oct is left in the build directory."
+
+h5read.oct-uninstall:
+	@echo "h5read.oct was not installed"
+
+install: $(INSTALL_TARGETS)
+
+uninstall: $(UNINSTALL_TARGETS)
 
 dist:
 	cvs export -D now -d $(distdir) $(package)
