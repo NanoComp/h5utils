@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2002 Massachusetts Institute of Technology
+/* Copyright (c) 2004 Massachusetts Institute of Technology
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -34,12 +34,30 @@
 
 #define PIN(min, x, max) MIN(MAX(min, x), max)
 
+/* convert a value val in [0,1] to a color from the colormap */
+static void cmap_lookup(REAL val, colormap_t cmap,
+			float *r, float *g, float *b, float *a)
+{
+     double w;
+     int i = val * (cmap.n - 1);
+     if (i > cmap.n - 2) i = cmap.n - 2;
+     if (i < 0) i = 0;
+     w = val * (cmap.n - 1) - i;
+     *r = cmap.rgba[i].r * (1 - w) + cmap.rgba[i+1].r * w;
+     *g = cmap.rgba[i].g * (1 - w) + cmap.rgba[i+1].g * w;
+     *b = cmap.rgba[i].b * (1 - w) + cmap.rgba[i+1].b * w;
+     *a = cmap.rgba[i].a * (1 - w) + cmap.rgba[i+1].a * w;
+}
+
 static void convert_row(int png_width, int data_width,
 			REAL scaley, REAL offsety,
 			REAL *datarow, REAL *datarow2, REAL weightrow,
 			int stride, REAL *maskrow, REAL *maskrow2,
 			REAL mask_thresh, REAL *mask_prev, int init_mask_prev,
-			REAL minrange, REAL maxrange, REAL scale, int invert,
+			int overlay, REAL *olayrow, REAL *olayrow2, 
+			colormap_t olay_cmap, REAL olaymin, REAL olaymax,
+			colormap_t cmap,
+			REAL minrange, REAL maxrange, REAL scale,
 			png_byte * row_pointer)
 {
      int i;
@@ -48,10 +66,15 @@ static void convert_row(int png_width, int data_width,
 	  REAL y = i * scaley + offsety;
 	  int n = PIN(0, (int) (y + 0.5), data_width-1);
 	  double delta = y - n;
-	  REAL val, maskval = 0.0;
+	  REAL val, maskval = 0.0, olayval = olaymin;
 
 	  if (n < 0 || n > data_width) {
-	       row_pointer[i] = 255;
+	       if (overlay)
+		    row_pointer[3*i]
+			 = row_pointer[3*i + 1]
+			 = row_pointer[3*i + 2] = 0;
+	       else
+		    row_pointer[i] = 255;
 	       continue;
 	  }
 	  
@@ -62,6 +85,9 @@ static void convert_row(int png_width, int data_width,
 		    maskval = (maskrow[n * stride] * weightrow +
 			       maskrow2[n * stride] * (1.0 - weightrow));
 	       }
+	       if (overlay)
+		    olayval = (olayrow[n * stride] * weightrow +
+			       olayrow2[n * stride] * (1.0 - weightrow));
 	  }
 	  else {
 	       int n2 = PIN(0, n + (delta < 0.0 ? -1 : 1), data_width-1);
@@ -71,6 +97,13 @@ static void convert_row(int png_width, int data_width,
 		     datarow[n2 * stride] * absdelta) * weightrow +
 		    (datarow2[n * stride] * (1.0 - absdelta) +
 		     datarow2[n2 * stride] * absdelta) * 
+		    (1.0 - weightrow);
+	       if (overlay)
+		    olayval = 
+			 (olayrow[n * stride] * (1.0 - absdelta) +
+			  olayrow[n2 * stride] * absdelta) * weightrow +
+			 (olayrow2[n * stride] * (1.0 - absdelta) +
+			  olayrow2[n2 * stride] * absdelta) * 
 		    (1.0 - weightrow);
 	       if (maskrow != NULL) {
 		    maskval = 
@@ -94,7 +127,12 @@ static void convert_row(int png_width, int data_width,
 	       }
 	       mask_prev[i] = maskval;
 	       if (maskmin <= mask_thresh && maskmax >= mask_thresh) {
-		    row_pointer[i] = 255;
+		    if (overlay)
+			 row_pointer[3*i]
+			      = row_pointer[3*i + 1]
+			      = row_pointer[3*i + 2] = 0;
+		    else
+			 row_pointer[i] = 255;
 		    continue;
 	       }
 	  }	 
@@ -104,8 +142,19 @@ static void convert_row(int png_width, int data_width,
 	  else if (val < minrange)
 	       val = minrange;
 	  
-	  if (invert)
-	       row_pointer[i] = 254 - (val - minrange) * scale;
+	  if (overlay) {
+	       float r, g, b, a, ro, go, bo, ao;
+	       cmap_lookup((val - minrange) / (maxrange - minrange),
+			   cmap, &r, &g, &b, &a);
+	       cmap_lookup((olayval - olaymin) / (olaymax - olaymin),
+			   olay_cmap, &ro, &go, &bo, &ao);
+	       r = r * (1 - ao) + ro * ao;
+	       g = g * (1 - ao) + go * ao;
+	       b = b * (1 - ao) + bo * ao;
+	       row_pointer[3*i    ] = r * 255 + 0.5;
+	       row_pointer[3*i + 1] = g * 255 + 0.5;
+	       row_pointer[3*i + 2] = b * 255 + 0.5;
+	  }
 	  else
 	       row_pointer[i] = (val - minrange) * scale;
      }
@@ -119,7 +168,7 @@ static void init_palette(png_colorp palette, colormap_t colormap)
      for (i = 0; i < 255; ++i) {
 	  int j = i * 1.0/254 * (colormap.n - 1);
 	  int j2 = (j == colormap.n - 1) ? j : j + 1;
-	  float dj = i * 1.0/254 * (colormap.n - 1) - j;
+	  REAL dj = i * 1.0/254 * (colormap.n - 1) - j;
 	  float r,g,b;
 	  r = colormap.rgba[j].r * (1-dj) + colormap.rgba[j2].r * dj;
 	  g = colormap.rgba[j].g * (1-dj) + colormap.rgba[j2].g * dj;
@@ -139,6 +188,9 @@ static void init_palette(png_colorp palette, colormap_t colormap)
 	  palette[255].green = palette[255].blue = palette[255].red = 255; 
 }
 
+#define USE_ALPHA 0
+
+#if USE_ALPHA
 static void init_alpha(png_structp png_ptr, png_infop info_ptr,
 		       colormap_t colormap)
 {
@@ -155,7 +207,7 @@ static void init_alpha(png_structp png_ptr, png_infop info_ptr,
      for (i = 0; i < 255; ++i) {
           int j = i * 1.0/254 * (colormap.n - 1);
           int j2 = (j == colormap.n - 1) ? j : j + 1;
-          float dj = i * 1.0/254 * (colormap.n - 1) - j;
+          REAL dj = i * 1.0/254 * (colormap.n - 1) - j;
           float a = colormap.rgba[j].a * (1-dj) + colormap.rgba[j2].a * dj;
 	  trans[i] = a * 255 + 0.5;
      }
@@ -163,14 +215,15 @@ static void init_alpha(png_structp png_ptr, png_infop info_ptr,
 
      png_set_tRNS(png_ptr, info_ptr, trans, 256, 0);
 }
+#endif
 
 void writepng(char *filename,
 	      int nx, int ny, int transpose, 
 	      REAL skew, REAL scalex, REAL scaley,
 	      REAL * data,
 	      REAL *mask, REAL mask_thresh,
+	      REAL *overlay, colormap_t overlay_cmap,
 	      REAL minrange, REAL maxrange,
-	      int invert,
 	      colormap_t colormap)
 {
      FILE *fp;
@@ -178,6 +231,7 @@ void writepng(char *filename,
      png_infop info_ptr;
      int height, width;
      double skewsin = sin(skew), skewcos = cos(skew);
+     REAL minoverlay = 0, maxoverlay = 0;
 
      /* compute png size from scaled (and possibly transposed) data size,
       * and reverse the meaning of the scale factors; now they are what we 
@@ -193,6 +247,17 @@ void writepng(char *filename,
 	  width = MAX(1, ny * scaley * (1.0 + fabs(skewsin)));
 	  scalex = height==1 ? 0 : (1.0 * (nx-1)) / (height-1);
 	  scaley = width==1 ? 0 : ((1.0 + fabs(skewsin)) * (ny-1)) / (width-1);
+     }
+
+     if (overlay) {
+	  int i;
+	  minoverlay = maxoverlay = overlay[0];
+	  for (i = 1; i < nx * ny; ++i) {
+	       if (minoverlay > overlay[i])
+		    minoverlay = overlay[i];
+	       if (maxoverlay < overlay[i])
+		    maxoverlay = overlay[i];
+	  }
      }
 
      fp = fopen(filename, "wb");
@@ -240,16 +305,23 @@ void writepng(char *filename,
        compression_type and filter_type MUST currently be
        PNG_COMPRESSION_TYPE_BASE and PNG_FILTER_TYPE_BASE. REQUIRED */
 
-     png_set_IHDR(png_ptr, info_ptr, width, height, 8 /* bit_depth */ ,
-		  PNG_COLOR_TYPE_PALETTE,
-		  PNG_INTERLACE_NONE,
-		  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-     {
+     if (overlay) /* need RBG color for overlay mixing */
+	  png_set_IHDR(png_ptr, info_ptr, width, height, 8 /* bit_depth */ ,
+		       PNG_COLOR_TYPE_RGB,
+		       PNG_INTERLACE_NONE,
+		       PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+     else {
 	  png_colorp palette;
 
+	  png_set_IHDR(png_ptr, info_ptr, width, height, 8 /* bit_depth */ ,
+		       PNG_COLOR_TYPE_PALETTE,
+		       PNG_INTERLACE_NONE,
+		       PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
 	  /* initialize alpha channel (if any) via png_set_tRNS */
+#if USE_ALPHA
 	  init_alpha(png_ptr, info_ptr, colormap);
+#endif
 	  palette = (png_colorp) png_malloc(png_ptr, 256 * sizeof(png_color));
 
 	  /* set the palette if there is one.  REQUIRED for indexed-color
@@ -274,7 +346,8 @@ void writepng(char *filename,
 	  else
 	       scale = 0.0;
 
-	  row_pointer = (png_byte *) malloc(width * sizeof(png_byte));
+	  row_pointer = (png_byte *) malloc(width * sizeof(png_byte) *
+					    (overlay ? 3 : 1));
 	  if (row_pointer == NULL) {
 	       fclose(fp);
 	       return;
@@ -306,7 +379,10 @@ void writepng(char *filename,
 				mask ? mask + n : NULL,
 				mask ? mask + n3 : NULL,
 				mask_thresh, mask_prev, row == 0,
-				minrange, maxrange, scale, invert,
+				overlay != 0,
+				overlay + n, overlay + n2,
+				overlay_cmap, minoverlay, maxoverlay,
+				colormap, minrange, maxrange, scale,
 				row_pointer);
 	       else
 		    convert_row(width, data_width, scaley, offset,
@@ -316,7 +392,10 @@ void writepng(char *filename,
 				mask ? mask + n * data_width : NULL,
 				mask ? mask + n3 * data_width : NULL,
 				mask_thresh, mask_prev, row == 0,
-				minrange, maxrange, scale, invert,
+				overlay != 0,
+				overlay + n*data_width, overlay+n2*data_width,
+				overlay_cmap, minoverlay, maxoverlay,
+				colormap, minrange, maxrange, scale,
 				row_pointer);
 	       png_write_rows(png_ptr, &row_pointer, 1);
 	  }
@@ -359,7 +438,7 @@ void writepng_autorange(char *filename,
 			REAL skew, REAL scalex,REAL scaley,
 			REAL * data,
 			REAL *mask, REAL mask_thresh,
-			int invert,
+			REAL *overlay, colormap_t overlay_cmap,
 			colormap_t colormap)
 {
      static REAL range = 0.0;
@@ -386,5 +465,6 @@ void writepng_autorange(char *filename,
 	       range = newrange;
      }
      writepng(filename, nx, ny, transpose, skew, scalex, scaley,
-	      data, mask, mask_thresh, -range, range, invert, colormap);
+	      data, mask, mask_thresh, overlay, overlay_cmap,
+	      -range, range, colormap);
 }

@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2002 Massachusetts Institute of Technology
+/* Copyright (c) 2004 Massachusetts Institute of Technology
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -37,6 +37,8 @@
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5topng error: %s\n", msg); exit(EXIT_FAILURE); } }
 
 #define CMAP_DEFAULT "gray"
+#define OVERLAY_CMAP_DEFAULT "yellow"
+#define OVERLAY_OPACITY_DEFAULT 0.2
 #define CMAP_DIR DATADIR "/" PACKAGE_NAME "/colormaps/"
 
 void usage(FILE *f)
@@ -65,14 +67,19 @@ void usage(FILE *f)
 	     "   -M <max> : set top of color scale to data value <max>\n"
 	     "         -R : use uniform colormap range for all files\n"
 	     "  -C <file> : superimpose contour outlines from <file>\n"
+	     "  -A <file> : overlay data from <file>, as specified by -y\n"
+"  -a <c>:<o>: overlay colormap <c>, opacity <o> (0-1) [default: %s:%g]\n"
 	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
-	     "              -- you can also specify a dataset via <filename>:<name>\n"
-	  );
+	     "              -- you can also specify a dataset via <filename>:<name>\n",
+	  OVERLAY_CMAP_DEFAULT, OVERLAY_OPACITY_DEFAULT);
 }
 
-rgba_t gray_colors[2] = { {1,1,1,1}, {0,0,0,1} };
+rgba_t gray_colors[2] = { {1,1,1,0}, {0,0,0,1} };
 colormap_t gray_cmap = { 2, gray_colors };
+
+rgba_t yellow_colors[2] = { {1,1,1,0}, {1,1,0,1} };
+colormap_t yellow_cmap = {2, yellow_colors};
 
 static colormap_t load_colormap(FILE *f, int verbose)
 {
@@ -115,10 +122,94 @@ static colormap_t load_colormap(FILE *f, int verbose)
      return cmap;
 }
 
+colormap_t copy_colormap(const colormap_t c0)
+{
+     colormap_t c;
+     int i;
+     c.n = c0.n;
+     c.rgba = (rgba_t *) malloc(c.n * sizeof(rgba_t));
+     CHECK(c.rgba, "out of memory");
+     for (i = 0; i < c.n; ++i)
+	  c.rgba[i] = c0.rgba[i];
+     return c;
+}
+
+static char *my_strdup(const char *s)
+{
+     char *sd = (char *) malloc(sizeof(char) * (strlen(s) + 1));
+     CHECK(sd, "out of memory");
+     strcpy(sd, s);
+     return sd;
+}
+
+colormap_t get_cmap(const char *colormap, int invert, double scale_alpha,
+		    int verbose)
+{
+     int i;
+     colormap_t cmap;
+     FILE *cmap_f = NULL;
+     char *cmap_fname = (char *) malloc(sizeof(char) *
+					(strlen(CMAP_DIR) 
+					 + strlen(colormap) + 1));
+     CHECK(cmap_fname, "out of memory");
+     if (colormap[0] == '-') {
+	  invert = 1;
+	  colormap++;
+     }
+     strcpy(cmap_fname, CMAP_DIR); strcat(cmap_fname, colormap);
+     if (colormap[0] == '.' || colormap[0] == '/'
+	 || !(cmap_f = fopen(cmap_fname, "r"))) {
+	  free(cmap_fname);
+	  cmap_fname = my_strdup(colormap);
+	  if (!(cmap_f = fopen(cmap_fname, "r"))) {
+	       if (!strcmp(colormap, "gray"))
+		    cmap = gray_cmap;
+	       if (!strcmp(colormap, "yellow"))
+		    cmap = yellow_cmap;
+	       else {
+		    fprintf(stderr, "Could not find colormap \"%s\"\n",
+			    colormap);
+		    exit(EXIT_FAILURE);
+	       }
+	  }
+     }
+     if (cmap.rgba == gray_colors) {
+	  if (verbose)
+	       printf("Using built-in gray colormap%s.\n",
+		      invert ? " (inverted)" : "");
+	  cmap = copy_colormap(cmap);
+     }
+     else if (cmap.rgba == yellow_colors) {
+	  if (verbose)
+	       printf("Using built-in yellow colormap%s.\n",
+		      invert ? " (inverted)" : "");
+	  cmap = copy_colormap(cmap);
+     }
+     else {
+	  if (verbose)
+	       printf("Using colormap \"%s\" in file \"%s\"%s.\n",
+		      colormap, cmap_fname, invert ? " (inverted)" : "");
+	  cmap = load_colormap(cmap_f, verbose);
+	  fclose(cmap_f);
+     }
+     free(cmap_fname);
+     if (invert)
+	  for (i = 0; i < cmap.n - 1 - i; ++i) {
+	       rgba_t rgba = cmap.rgba[i];
+	       cmap.rgba[i] = cmap.rgba[cmap.n - 1 - i];
+	       cmap.rgba[cmap.n - 1 - i] = rgba;
+	  }
+     if (verbose) printf("Scaling opacity by %g\n", scale_alpha);
+     for (i = 0; i < cmap.n; ++i)
+	  cmap.rgba[i].a *= scale_alpha;
+     return cmap;
+}
+
 int main(int argc, char **argv)
 {
-     arrayh5 a, contour_data;
+     arrayh5 a, contour_data, overlay_data;
      char *png_fname = NULL, *contour_fname = NULL, *data_name = NULL;
+     char *overlay_fname = NULL;
      REAL mask_thresh = 0;
      int mask_thresh_set = 0;
      double min = 0, max = 0, allmin = 0, allmax = 0;
@@ -130,9 +221,11 @@ int main(int argc, char **argv)
      int islice[4], center_slice[4] = {0,0,0,0};
      int err;
      int nx, ny;
-     char *colormap = NULL, *cmap_fname = NULL;
-     FILE *cmap_f = NULL;
+     char *colormap = NULL, *overlay_colormap = NULL;
+     int overlay_invert = 0;
      colormap_t cmap = { 0, NULL };
+     colormap_t overlay_cmap = { 0, NULL };
+     double overlay_opacity = OVERLAY_OPACITY_DEFAULT;
      int verbose = 0;
      int transpose = 0;
      int zero_center = 0;
@@ -141,11 +234,10 @@ int main(int argc, char **argv)
      double skew = 0.0;
      int ifile;
 
-     colormap = (char*) malloc(sizeof(char) * (strlen(CMAP_DEFAULT) + 1));
-     CHECK(colormap, "out of memory");
-     strcpy(colormap, CMAP_DEFAULT);
+     colormap = my_strdup(CMAP_DEFAULT);
+     overlay_colormap = my_strdup(OVERLAY_CMAP_DEFAULT);
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:0c:m:M:RC:b:d:vX:Y:S:TrZs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:0c:m:M:RC:b:d:vX:Y:S:TrZs:Va:A:")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -171,24 +263,19 @@ int main(int argc, char **argv)
 		   break;
 	      case 'o':
 		   free(png_fname);
-		   png_fname = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(png_fname, "out of memory");
-		   strcpy(png_fname, optarg);
+		   png_fname = my_strdup(optarg);
 		   break;
 	      case 'd':
 		   free(data_name);
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      case 'C':
 		   free(contour_fname);
-		   contour_fname = (char*) malloc(sizeof(char) *
-						  (strlen(optarg) + 1));
-		   CHECK(contour_fname, "out of memory");
-		   strcpy(contour_fname, optarg);
+		   contour_fname = my_strdup(optarg);
+		   break;
+	      case 'A':
+		   free(overlay_fname);
+		   overlay_fname = my_strdup(optarg);
 		   break;
 	      case 'x':
 		   islice[0] = atoi(optarg);
@@ -211,10 +298,17 @@ int main(int argc, char **argv)
                    break;
 	      case 'c':
 		   free(colormap);
-		   colormap = (char*) malloc(sizeof(char) *
-					     (strlen(optarg) + 1));
-                   CHECK(colormap, "out of memory");
-                   strcpy(colormap, optarg);
+		   colormap = my_strdup(optarg);
+		   break;
+	      case 'a':
+		   free(overlay_colormap);
+		   overlay_colormap = my_strdup(optarg);
+		   if (strchr(optarg, ':')) {
+			*(strchr(overlay_colormap, ':')) = 0;
+			sscanf(strchr(optarg, ':')+1, "%lg", &overlay_opacity);
+			CHECK(overlay_opacity >= 0 && overlay_opacity <= 1,
+			      "invalid opacity in -a: must be from 0 to 1");
+		   }
 		   break;
 	      case 'm':
 		   min = atof(optarg);
@@ -246,40 +340,9 @@ int main(int argc, char **argv)
 		   return EXIT_FAILURE;
 	  }
 
-     if (colormap[0] == '-' || strstr(colormap, ".h5"))
-	  fprintf(stderr, "  -- Note that the the '-c' option syntax changed in h5topng 1.7!\n     To get the old behavior, use '-c bluered' ('man h5topng' for more info).\n");
-
-     cmap_fname = (char *) malloc(sizeof(char) *
-				  (strlen(CMAP_DIR) + strlen(colormap) + 1));
-     CHECK(cmap_fname, "out of memory");
-     strcpy(cmap_fname, CMAP_DIR); strcat(cmap_fname, colormap);
-     if (colormap[0] == '.' || colormap[0] == '/'
-	 || !(cmap_f = fopen(cmap_fname, "r"))) {
-	  free(cmap_fname);
-	  cmap_fname = (char *) malloc(sizeof(char) * (strlen(colormap) + 1));
-	  CHECK(cmap_fname, "out of memory");
-	  strcpy(cmap_fname, colormap);
-	  if (!(cmap_f = fopen(cmap_fname, "r"))) {
-	       if (!strcmp(colormap, "gray"))
-		    cmap = gray_cmap;
-	       else {
-		    fprintf(stderr, "Could not find colormap \"%s\"\n",
-			    colormap);
-		    exit(EXIT_FAILURE);
-	       }
-	  }
-     }
-     if (cmap.rgba == gray_colors) {
-	  if (verbose)
-	       printf("Using built-in gray colormap.\n");
-     }
-     else {
-	  if (verbose)
-	       printf("Using colormap \"%s\" in file \"%s\".\n",
-		      colormap, cmap_fname);
-	  cmap = load_colormap(cmap_f, verbose);
-	  fclose(cmap_f);
-     }
+     cmap = get_cmap(colormap, invert, 1.0, verbose);
+     overlay_cmap = get_cmap(overlay_colormap, overlay_invert,
+			     overlay_opacity, verbose);
 
      if (optind == argc) {  /* no parameters left */
 	  usage(stderr);
@@ -314,6 +377,28 @@ int main(int argc, char **argv)
 	  free(fname);
      }
 
+     if (overlay_fname) {
+	  int cnx, cny;
+	  char *fname, *dname;
+
+	  fname = split_fname(overlay_fname, &dname);
+	  if (!dname[0])
+	       dname = NULL;
+
+	  if (verbose)
+	       printf("reading overlay data from \"%s\".\n", fname);
+	  err = arrayh5_read(&overlay_data, fname, dname, NULL,
+			     4, slicedim, islice, center_slice);
+	  CHECK(!err, arrayh5_read_strerror[err]);
+	  CHECK(overlay_data.rank >= 1,
+		"data must have at least one dimension");
+	  
+	  cnx = overlay_data.dims[0];
+	  cny = overlay_data.rank >= 2 ? overlay_data.dims[1] : 1;
+
+	  free(fname);
+     }
+
  process_files:     
      if (verbose)
 	  printf("------\n");
@@ -342,6 +427,9 @@ int main(int argc, char **argv)
 	  CHECK(!contour_fname || arrayh5_conformant(a, contour_data),
 		"contour data must be conformant with source data");
 	  
+	  CHECK(!overlay_fname || arrayh5_conformant(a, overlay_data),
+		"overlay data must be conformant with source data");
+	  
 	  if (!png_fname)
 	       png_fname = replace_suffix(h5_fname, ".h5", ".png");
 	  
@@ -359,7 +447,6 @@ int main(int argc, char **argv)
 	       if (ifile == optind || a_max > allmax)
 		    allmax = a_max;
 	       if (min > max) {
-		    invert = !invert;
 		    a_min = min;
 		    min = max;
 		    max = a_min;
@@ -382,7 +469,8 @@ int main(int argc, char **argv)
 	       writepng(png_fname, nx, ny, !transpose, skew,
 			scaley, scalex, a.data, 
 			contour_fname ? contour_data.data : NULL, mask_thresh,
-			min, max, invert, cmap);
+			overlay_fname ? overlay_data.data : NULL,overlay_cmap, 
+			min, max, cmap);
 	  }
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
@@ -403,11 +491,13 @@ int main(int argc, char **argv)
      if (contour_fname)
 	  arrayh5_destroy(contour_data);
      free(contour_fname);
+     if (overlay_fname)
+	  arrayh5_destroy(overlay_data);
+     free(overlay_fname);
      free(data_name);
 
      if (cmap.rgba != gray_colors)
 	  free(cmap.rgba);
-     free(cmap_fname);
      free(colormap);
 
      return EXIT_SUCCESS;

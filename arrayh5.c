@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2002 Massachusetts Institute of Technology
+/* Copyright (c) 2004 Massachusetts Institute of Technology
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -242,7 +242,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
      free(maxdims);
      free(dims_copy);
      
-     for (i = 0; i < nslicedims && slicedim[i] == NO_SLICE_DIM; ++i)
+     for (i = 0; i < nslicedims && slicedim_[i] == NO_SLICE_DIM; ++i)
 	  ;
 
      if (i == nslicedims) { /* no slices */
