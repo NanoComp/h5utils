@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 		"all input arrays must have the same dimensions");
 
 	  if (verbose)
-	       printf("read variable f%d: dataset \"%s\" in file \"%s\"\n",
+	       printf("read variable d%d: dataset \"%s\" in file \"%s\"\n",
 		      i + 1, dname ? dname : "<first>", fname);
 	  
 	  free(fname);
@@ -233,11 +233,11 @@ int main(int argc, char **argv)
      vals = (double *) malloc(sizeof(double) * (n + 4));
      CHECK(vals, "out of memory");
      for (i = 0; i < n; ++i) {
-	  vars[i] = my_strdup("fxxxxxxxxxxxx");
+	  vars[i] = my_strdup("dxxxxxxxxxxxx");
 #ifdef HAVE_SNPRINTF
-	  snprintf(vars[i], 14, "f%d", i + 1);
+	  snprintf(vars[i], 14, "d%d", i + 1);
 #else
-	  sprintf(vars[i], "f%d", i + 1);
+	  sprintf(vars[i], "d%d", i + 1);
 #endif
 	  vals[i] = 0.0;
      }
