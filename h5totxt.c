@@ -113,6 +113,7 @@ int main(int argc, char **argv)
 		   transpose = 1;
 		   break;
 	      case 'o':
+		   free(txt_fname);
                    txt_fname = (char*) malloc(sizeof(char) *
                                               (strlen(optarg) + 1));
                    CHECK(txt_fname, "out of memory");
@@ -126,6 +127,7 @@ int main(int argc, char **argv)
 		   strcpy(sep, optarg);
 		   break;
 	      case 'd':
+		   free(data_name);
 		   data_name = (char*) malloc(sizeof(char) *
 					      (strlen(optarg) + 1));
 		   CHECK(data_name, "out of memory");
@@ -156,14 +158,14 @@ int main(int argc, char **argv)
      for (ifile = optind; ifile < argc; ++ifile) {
 	  char *dname, *h5_fname;
 	  h5_fname = split_fname(argv[ifile], &dname);
-	  if (dname[0])
-	       data_name = dname;
+	  if (!dname[0])
+	       dname = data_name;
 
 	  if (verbose)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
 		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, h5_fname, data_name, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, dname, slicedim, islice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  
@@ -220,6 +222,7 @@ int main(int argc, char **argv)
 	  free(h5_fname);
      }
      free(sep);
+     free(data_name);
 
      return EXIT_SUCCESS;
 }

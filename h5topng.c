@@ -128,18 +128,21 @@ int main(int argc, char **argv)
 		   invert = 1;
 		   break;
 	      case 'o':
+		   free(png_fname);
 		   png_fname = (char*) malloc(sizeof(char) *
 					      (strlen(optarg) + 1));
 		   CHECK(png_fname, "out of memory");
 		   strcpy(png_fname, optarg);
 		   break;
 	      case 'd':
+		   free(data_name);
 		   data_name = (char*) malloc(sizeof(char) *
 					      (strlen(optarg) + 1));
 		   CHECK(data_name, "out of memory");
 		   strcpy(data_name, optarg);
 		   break;		   
 	      case 'C':
+		   free(contour_fname);
 		   contour_fname = (char*) malloc(sizeof(char) *
 						  (strlen(optarg) + 1));
 		   CHECK(contour_fname, "out of memory");
@@ -213,14 +216,14 @@ int main(int argc, char **argv)
      for (ifile = optind; ifile < argc; ++ifile) {
           char *dname, *h5_fname;
           h5_fname = split_fname(argv[ifile], &dname);
-          if (dname[0])
-               data_name = dname;
+          if (!dname[0])
+               dname = data_name;
 
 	  if (verbose)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
 		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, h5_fname, data_name, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, dname, slicedim, islice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  
@@ -277,6 +280,7 @@ int main(int argc, char **argv)
 	  arrayh5_destroy(contour_data);
      free(mask);
      free(contour_fname);
+     free(data_name);
 
      return EXIT_SUCCESS;
 }
