@@ -76,7 +76,7 @@ hsv jet lines pink prism spring summer vga winter
 
 colormaps-install:
 	$(INSTALL) -d $(datadir)/h5utils/colormaps
-	for cmap in $(COLORMAPS); $(INSTALL) -m 0644 $$cmap $(datadir)/h5utils/colormaps || fail=yes; done && test -z "$$fail"
+	for cmap in $(COLORMAPS); do $(INSTALL) -m 0644 colormaps/$$cmap $(datadir)/h5utils/colormaps || fail=yes; done && test -z "$$fail"
 
 datadir-uninstall:
 	rm -rf $(datadir)/h5utils
