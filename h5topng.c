@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include <unistd.h>
 
@@ -50,6 +51,7 @@ void usage(FILE *f)
 	     "         -T : transpose the data [default: no]\n"
 	     "         -c : blue-white-red palette instead of grayscale\n"
 	     "         -r : reverse color map [default: no]\n"
+	     "         -Z : center color scale at zero [default: no]\n"
 	     "   -m <min> : set bottom of color scale to data value <min>\n"
 	     "   -M <max> : set top of color scale to data value <max>\n"
 	     "  -C <file> : superimpose contour outlines from <file>\n"
@@ -104,12 +106,13 @@ int main(int argc, char **argv)
      colormap_t colormap = GRAYSCALE;
      int verbose = 0;
      int transpose = 0;
+     int zero_center = 0;
      double scalex = 1.0, scaley = 1.0;
      int invert = 0;
      double skew = 0.0;
      int ifile;
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:Trs:V")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:TrZs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -126,6 +129,9 @@ int main(int argc, char **argv)
 		   break;
 	      case 'r':
 		   invert = 1;
+		   break;
+	      case 'Z':
+		   zero_center = 1;
 		   break;
 	      case 'o':
 		   free(png_fname);
@@ -266,6 +272,10 @@ int main(int argc, char **argv)
 		    a_min = min;
 		    min = max;
 		    max = a_min;
+	       }
+	       if (zero_center) {
+		    max = fabs(max) > fabs(min) ? fabs(max) : fabs(min);
+		    min = -max;
 	       }
 	  }
 	  
