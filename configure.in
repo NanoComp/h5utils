@@ -80,4 +80,31 @@ AC_SUBST(H5READ_UNINSTALL_TARGET)
 
 ###########################################################################
 
+AC_ARG_WITH(v5d, [  --with-v5d=<dir>        use Vis5d in <dir> for h5tov5d], ok=$withval, ok=no)
+H5TOV5D_TARGET=""
+V5D_FILES=""
+V5D_INCLUDES=""
+if test "$ok" != "no"; then
+	AC_MSG_CHECKING(for Vis5d object files and headers)
+	if test -r "$ok/src/v5d.o" -a -r "$ok/src/binio.o" -a -r "$ok/src/v5d.h" -a -r "$ok/src/binio.h"; then
+		V5D_FILES="$ok/src/v5d.o $ok/src/binio.o"
+		V5D_INCLUDES="-I$ok/src"
+	elif test -r "$ok/v5d.o" -a -r "$ok/binio.o" -a -r "$ok/v5d.h" -a -r "$ok/binio.h"; then
+		V5D_FILES="$ok/v5d.o $ok/binio.o"
+		V5D_INCLUDES="-I$ok"
+	fi
+	if test -z "$V5D_FILES"; then
+		AC_MSG_RESULT(not found)
+		AC_MSG_ERROR(couldn't read Vis5D object files in $ok)
+	else
+		AC_MSG_RESULT(found)
+	fi
+	H5TOV5D_TARGET=h5tov5d
+fi
+AC_SUBST(H5TOV5D_TARGET)
+AC_SUBST(V5D_FILES)
+AC_SUBST(V5D_INCLUDES)
+
+###########################################################################
+
 AC_OUTPUT(Makefile)

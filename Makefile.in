@@ -13,23 +13,28 @@ VERSION = @VERSION@
 package = h5utils
 distdir = $(package)-$(VERSION)
 
+###########################################################################
+
 OBJ_h5topng = h5topng.o arrayh5.o writepng.o
 SRC_h5read = h5read.cc arrayh5.o
 OBJ_h5totxt = h5totxt.o arrayh5.o
 
-H5TOPNG_TARGET = @H5TOPNG_TARGET@
-H5READ_TARGET = @H5READ_TARGET@
-PNG_LIBS = @PNG_LIBS@
-
 OCT_INSTALL_DIR = @OCT_INSTALL_DIR@
 H5READ_INSTALL_TARGET = @H5READ_INSTALL_TARGET@
 H5READ_UNINSTALL_TARGET = @H5READ_UNINSTALL_TARGET@
+PNG_LIBS = @PNG_LIBS@
+V5D_FILES = @V5D_FILES@
+V5D_INCLUDES = @V5D_INCLUDES@
 
-TARGETS =  h5totxt $(H5TOPNG_TARGET) $(H5READ_TARGET)
+###########################################################################
+
+TARGETS = h5totxt @H5TOPNG_TARGET@ @H5READ_TARGET@ @H5TOV5D_TARGET@
 INSTALL_TARGETS = $(TARGETS:%=%-install)
 UNINSTALL_TARGETS = $(TARGETS:%=%-uninstall)
 
 all: $(TARGETS)
+
+###########################################################################
 
 h5read.oct: $(SRC_h5read)
 	mkoctfile $(SRC_h5read) $(LIBS)
@@ -40,8 +45,17 @@ h5topng: $(OBJ_h5topng)
 h5totxt: $(OBJ_h5totxt)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5totxt) $(LIBS) -o $@
 
+h5tov5d: h5tov5d.o $(V5D_FILES)
+	$(CC) $(CFLAGS) $(LDFLAGS) h5tov5d.o $(V5D_FILES) \
+              arrayh5.o $(LIBS) -o $@
+
+h5tov5d.o: h5tov5d.c
+	$(CC) -c $(DEFS) $(V5D_INCLUDES) $(CFLAGS) $< -o $@
+
 .c.o:
 	$(CC) -c $(DEFS) $(CFLAGS) $< -o $@
+
+###########################################################################
 
 h5topng-install:
 	$(INSTALL) -d $(prefix)/bin
@@ -63,6 +77,16 @@ h5totxt-uninstall:
 	rm -f $(prefix)/bin/h5totxt
 	rm -f $(prefix)/man/man1/h5totxt.1
 
+h5tov5d-install:
+	$(INSTALL) -d $(prefix)/bin
+	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -m 0755 -s h5tov5d $(prefix)/bin/`echo h5tov5d|sed '$(transform)'`
+	$(INSTALL) -m 0644 h5tov5d.1 $(prefix)/man/man1
+
+h5tov5d-uninstall:
+	rm -f $(prefix)/bin/h5tov5d
+	rm -f $(prefix)/man/man1/h5tov5d.1
+
 h5read-install:
 	$(INSTALL) -d $(OCT_INSTALL_DIR)
 	$(INSTALL) -m 0755 h5read.oct $(OCT_INSTALL_DIR)
@@ -73,6 +97,8 @@ h5read-uninstall:
 	rm -f $(OCT_INSTALL_DIR)/h5read.oct
 
 h5read.oct-uninstall: $(H5READ_UNINSTALL_TARGET)
+
+###########################################################################
 
 install: $(INSTALL_TARGETS)
 
@@ -86,7 +112,7 @@ dist:
 	rm -rf $(distdir)
 
 clean:
-	rm -f $(OBJ_h5topng) h5totxt.o h5read.o $(TARGETS) core a.out octave-core
+	rm -f $(OBJ_h5topng) h5tov5d.o h5totxt.o h5read.o $(TARGETS) core a.out octave-core
 
 distclean: clean
 	rm -f config.cache Makefile config.log config.status config.h $(TARGETS)
