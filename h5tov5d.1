@@ -1,4 +1,4 @@
-.\" Copyright (c) 1999 Massachusetts Institute of Technology
+.\" Copyright (c) 1999, 2000 Massachusetts Institute of Technology
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
 .\" a copy of this software and associated documentation files (the
@@ -19,7 +19,7 @@
 .\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 .\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .\"
-.TH H5TOV5D 1 "December 6, 1999" "h5utils" "h5utils"
+.TH H5TOV5D 1 "December 31, 1999" "h5utils" "h5utils"
 .SH NAME
 h5tov5d \- convert datasets in HDF5 files to Vis5d format
 .SH SYNOPSIS
@@ -65,10 +65,16 @@ Print the version number and copyright info for h5tov5d.
 Verbose output.
 .TP
 \fB\-o\fR \fIfile\fR
-Send Vis5d output to
+Save the datasets from all of the input files to a single Vis5d
 .I file
-rather than to the filename with .h5 replaced with .v5d (the default).
-If multiple input files are specified, this only applies to the first file.
+with each dataset being expressed as a separate Vis5d variable.  In
+this way, you can use Vis5d to superimpose and compare the plots from
+the different datasets.  The first two dimensions (or three, for 4d
+datasets) must be the same for all of the input datasets.
+
+Otherwise, the default behavior is to save each dataset to a separate
+Vis5d file, with the .h5 suffix of the input filename replaced by .v5d
+in the output filename.
 .TP
 \fB\-1\fR, \fB\-2\fR, \fB\-4\fR
 Use 1 (the default), 2, or 4 bytes to store each data point in the
@@ -96,5 +102,5 @@ command (included with hdf5) to find the names of datasets within a file.
 .SH BUGS
 Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
 .SH AUTHORS
-Written by Steven G. Johnson.  Copyright (c) 1999 by the Massachusetts
+Written by Steven G. Johnson.  Copyright (c) 1999, 2000 by the Massachusetts
 Institute of Technology.
