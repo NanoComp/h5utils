@@ -1,0 +1,104 @@
+<HTML><HEAD>
+<TITLE>README for h5utils</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF">
+
+<h1>h5utils</h1>
+
+<p>This package contains a couple of utilities that I wrote for
+accessing data in the HDF5 format developed by NCSA at the University
+of Illinois.  You will need the HDF5 library, available from the <a
+href="http://hdf.ncsa.uiuc.edu/">HDF home page</a>.
+
+<a>The author of this package is Steven G. Johnson (<a
+href="mailto:stevenj@alum.mit.edu">stevenj@alum.mit.edu</a>).
+
+<p>To compile and install the package, just type the usual:
+
+<pre>
+./configure
+make
+make install
+</pre>
+
+<p>Note that you need to have certain prerequisites, like the PNG and
+zlib libraries, and/or GNU Octave, as described below.
+
+<p>The utilities include:
+
+<h2>h5topng</h2>
+
+<p>This is a program to extract a two-dimensional slice from an HDF5
+dataset and export it as an image in PNG format.  It is designed for
+quick-and-dirty examination of data, and for batch-processing of data
+on the command-line.  However, it does support niceties like scaling,
+skewing, superimposing contours from another file, and a couple of
+different color maps.
+
+PNG is a free image format, and is a recommendation of the World Wide
+Web Consortium.  You will need to get the free libpng library if you
+don't have it already.  libpng and lots of other stuff can be found at
+the <a href="http://www.cdrom.com/pub/png">PNG home page</a>.
+
+<p>You will also need zlib (libz) if you don't already have it, for
+image compression (see the <a href="http://www.cdrom.com/pub/infozip/zlib/">zlib Home Page</a>).
+
+<p>The <code>h5topng</code> source code includes the files
+<code>writepng.c</code> and <code>writepng.h</code>, which provide
+self-contained subroutines for writing out a PNG image from a
+two-dimensional array of floating-point values.  You might find this
+useful if you want to directly output images from your own scientific
+programs.
+
+<p><code>h5topng</code> includes a man page; you can also run
+<code>h5topng -h</code> for a terse listing of options.
+
+<h2>h5read.oct</h2>
+
+<p>This is an Octave plug-in for importing 2d slices from HDF5
+datasets into Octave, where you can then manipulate and plot the data.
+GNU Octave is a free Matlab-like data analysis and numerical computing
+tool; you can download it or find more about it at the <a
+href="http://www.che.wisc.edu/octave/">Octave home page</a>.
+
+<p>You will need to have Octave already installed in order to compile
+this.  Once it is installed, you can either place
+<code>h5read.oct</code> with the other <code>.oct</code> files that
+came with Octave, or you can just leave it in the directory you run
+octave from.
+
+<p>In Octave, type <code>help h5read</code> for instructions.
+
+<h2>arrayh5</h2>
+
+<p>The files <code>arrayh5.c</code> and <code>arrayh5.h</code> define
+some data structures and utilities to let you grab multi-dimensional
+datasets (or slices thereof) from HDF5 files using a simplified
+interface.  You might find it useful in your own programs, or just to
+help you learn how to use HDF5.
+
+<h2>License and Copyright</h2>
+
+<p>Copyright &copy; 1999 Massachusetts Institute of Technology.
+
+<p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+</BODY>
+</HTML>
