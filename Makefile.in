@@ -7,6 +7,7 @@ LDFLAGS = @LDFLAGS@
 INSTALL = @INSTALL@
 prefix = @prefix@
 datadir = @datadir@
+mandir = @mandir@
 # c.f. AC_ARG_PROGRAM autoconf docs:
 transform=@program_transform_name@
 @SET_MAKE@
@@ -83,63 +84,63 @@ datadir-uninstall:
 
 h5topng-install: colormaps-install
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0755 -s h5topng $(prefix)/bin/`echo h5topng|sed '$(transform)'`
-	$(INSTALL) -m 0644 h5topng.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5topng.1 $(mandir)/man1
 
 h5topng-uninstall: datadir-uninstall
 	rm -f $(prefix)/bin/h5topng
-	rm -f $(prefix)/man/man1/h5topng.1
+	rm -f $(mandir)/man1/h5topng.1
 
 h5totxt-install:
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0755 -s h5totxt $(prefix)/bin/`echo h5totxt|sed '$(transform)'`
-	$(INSTALL) -m 0644 h5totxt.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5totxt.1 $(mandir)/man1
 
 h5totxt-uninstall:
 	rm -f $(prefix)/bin/h5totxt
-	rm -f $(prefix)/man/man1/h5totxt.1
+	rm -f $(mandir)/man1/h5totxt.1
 
 h5tovtk-install:
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0755 -s h5tovtk $(prefix)/bin/`echo h5tovtk|sed '$(transform)'`
-	$(INSTALL) -m 0644 h5tovtk.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5tovtk.1 $(mandir)/man1
 
 h5tovtk-uninstall:
 	rm -f $(prefix)/bin/h5tovtk
-	rm -f $(prefix)/man/man1/h5tovtk.1
+	rm -f $(mandir)/man1/h5tovtk.1
 
 h5fromtxt-install:
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0755 -s h5fromtxt $(prefix)/bin/`echo h5fromtxt|sed '$(transform)'`
-	$(INSTALL) -m 0644 h5fromtxt.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5fromtxt.1 $(mandir)/man1
 
 h5fromtxt-uninstall:
 	rm -f $(prefix)/bin/h5fromtxt
-	rm -f $(prefix)/man/man1/h5fromtxt.1
+	rm -f $(mandir)/man1/h5fromtxt.1
 
 h5fromh4-install:
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0755 -s h5fromh4 $(prefix)/bin/`echo h5fromh4|sed '$(transform)'`
-	$(INSTALL) -m 0644 h5fromh4.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5fromh4.1 $(mandir)/man1
 
 h5fromh4-uninstall:
 	rm -f $(prefix)/bin/h5fromh4
-	rm -f $(prefix)/man/man1/h5fromh4.1
+	rm -f $(mandir)/man1/h5fromh4.1
 
 h5tov5d-install:
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0755 -s h5tov5d $(prefix)/bin/`echo h5tov5d|sed '$(transform)'`
-	$(INSTALL) -m 0644 h5tov5d.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5tov5d.1 $(mandir)/man1
 
 h5tov5d-uninstall:
 	rm -f $(prefix)/bin/h5tov5d
-	rm -f $(prefix)/man/man1/h5tov5d.1
+	rm -f $(mandir)/man1/h5tov5d.1
 
 h5read-install:
 	$(INSTALL) -d $(OCT_INSTALL_DIR)
