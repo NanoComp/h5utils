@@ -118,8 +118,8 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 {
      hid_t file_id = -1, data_id = -1, space_id = -1;
      char *dname = NULL;
-     int err = 0, i;
-     hsize_t rank, *dims_copy, *maxdims;
+     int err = 0;
+     hsize_t i, rank, *dims_copy, *maxdims;
      int *dims;
 
      CHECK(a, "NULL array passed to arrayh5_read");
