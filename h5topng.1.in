@@ -129,9 +129,10 @@ color map for signed data, you may also want to use the
 option so that the center of the color scale (white) corresponds to
 zero.
 
-A color-map file is a sequence of whitespace-separated R G B triples,
-where each value is in the range 0.0 to 1.0 and indicates the fraction
-of red/green/blue.  The colors in the color map are linearly
+A color-map file is a sequence of whitespace-separated R G B A
+quadruples, where each value is in the range 0.0 to 1.0 and indicates
+the fraction of red/green/blue/alpha.  (An alpha of 0 is transparent
+and of 1 is opaque.)  The colors in the color map are linearly
 interpolated as necessary to provide an 8-bit color palette.
 .TP
 .B -r

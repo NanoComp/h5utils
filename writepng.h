@@ -36,12 +36,12 @@ typedef double REAL;
 #endif
 
 typedef struct {
-     float r, g, b;
-} rgb_t;
+     float r, g, b, a;
+} rgba_t;
 
 typedef struct {
      int n;
-     rgb_t *rgb;
+     rgba_t *rgba;
 } colormap_t;
 
 void writepng(char *filename,

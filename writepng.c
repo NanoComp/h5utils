@@ -120,16 +120,15 @@ static void init_palette(png_colorp palette, colormap_t colormap)
 	  int j2 = (j == colormap.n - 1) ? j : j + 1;
 	  float dj = i * 1.0/254 * (colormap.n - 1) - j;
 	  float r,g,b;
-	  r = colormap.rgb[j].r * (1-dj) + colormap.rgb[j2].r * dj;
-	  g = colormap.rgb[j].g * (1-dj) + colormap.rgb[j2].g * dj;
-	  b = colormap.rgb[j].b * (1-dj) + colormap.rgb[j2].b * dj;
+	  r = colormap.rgba[j].r * (1-dj) + colormap.rgba[j2].r * dj;
+	  g = colormap.rgba[j].g * (1-dj) + colormap.rgba[j2].g * dj;
+	  b = colormap.rgba[j].b * (1-dj) + colormap.rgba[j2].b * dj;
 	  palette[i].red = r * 255 + 0.5;
 	  palette[i].green = g * 255 + 0.5;
 	  palette[i].blue = b * 255 + 0.5;
      }
 
      /* set mask color: */
-
      if (palette[mid].red/3. + palette[mid].green/3. + palette[mid].blue/3.
 	 > mid)
 	  /* black */
@@ -137,6 +136,31 @@ static void init_palette(png_colorp palette, colormap_t colormap)
      else
 	  /* white */
 	  palette[255].green = palette[255].blue = palette[255].red = 255; 
+}
+
+static void init_alpha(png_structp png_ptr, png_infop info_ptr,
+		       colormap_t colormap)
+{
+     int i;
+     png_bytep trans;
+
+     for (i = 0; i < colormap.n; ++i)
+	  if ((int) (colormap.rgba[i].a * 255 + 0.5) < 255)
+	       break;
+     if (i >= colormap.n)
+	  return; /* all colors are opaque */
+
+     trans = (png_bytep) malloc(sizeof(png_byte) * 256);
+     for (i = 0; i < 255; ++i) {
+          int j = i * 1.0/254 * (colormap.n - 1);
+          int j2 = (j == colormap.n - 1) ? j : j + 1;
+          float dj = i * 1.0/254 * (colormap.n - 1) - j;
+          float a = colormap.rgba[j].a * (1-dj) + colormap.rgba[j2].a * dj;
+	  trans[i] = a * 255 + 0.5;
+     }
+     trans[255] = 255; /* mask is always opaque */
+
+     png_set_tRNS(png_ptr, info_ptr, trans, 256, 0);
 }
 
 void writepng(char *filename,
@@ -229,6 +253,9 @@ void writepng(char *filename,
 	  palette = (png_colorp) png_malloc(png_ptr, 256 * sizeof(png_color));
 	  init_palette(palette, colormap);
 	  png_set_PLTE(png_ptr, info_ptr, palette, 256);
+
+	  /* initialize alpha channel (if any) via png_set_tRNS */
+	  init_alpha(png_ptr, info_ptr, colormap);
      }
 
      /* Write the file header information.  REQUIRED */

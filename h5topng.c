@@ -95,14 +95,14 @@ static char *split_fname(char *fname, char **data_name)
      return filename;
 }
 
-rgb_t gray_colors[2] = { {1,1,1}, {0,0,0} };
+rgba_t gray_colors[2] = { {1,1,1,1}, {0,0,0,1} };
 colormap_t gray_cmap = { 2, gray_colors };
 
 static colormap_t load_colormap(FILE *f, int verbose)
 {
      colormap_t cmap = {0, NULL};
      int nalloc = 0;
-     float r,g,b;
+     float r,g,b,a;
      int c;
      
      /* read initial comment lines, and echo if verbose */
@@ -120,18 +120,19 @@ static colormap_t load_colormap(FILE *f, int verbose)
      } while (c == '\n');
      if (c != EOF) ungetc(c, f);
 
-     while (3 == fscanf(f, "%g %g %g", &r, &g, &b)) {
+     while (4 == fscanf(f, "%g %g %g %g", &r, &g, &b, &a)) {
 	  if (cmap.n >= nalloc) {
 	       nalloc = (1 + nalloc) * 2;
-	       cmap.rgb = realloc(cmap.rgb, nalloc * sizeof(rgb_t));
-	       CHECK(cmap.rgb, "out of memory");
+	       cmap.rgba = realloc(cmap.rgba, nalloc * sizeof(rgba_t));
+	       CHECK(cmap.rgba, "out of memory");
 	  }
-	  cmap.rgb[cmap.n].r = r;
-	  cmap.rgb[cmap.n].g = g;
-	  cmap.rgb[cmap.n].b = b;
+	  cmap.rgba[cmap.n].r = r;
+	  cmap.rgba[cmap.n].g = g;
+	  cmap.rgba[cmap.n].b = b;
+	  cmap.rgba[cmap.n].a = a;
 	  cmap.n++;
      }
-     cmap.rgb = realloc(cmap.rgb, cmap.n * sizeof(rgb_t));
+     cmap.rgba = realloc(cmap.rgba, cmap.n * sizeof(rgba_t));
      CHECK(cmap.n >= 1, "invalid colormap file");
      if (verbose)
 	  printf("%d color entries read from colormap file.\n", cmap.n);
@@ -279,7 +280,7 @@ int main(int argc, char **argv)
 	       }
 	  }
      }
-     if (cmap.rgb == gray_colors) {
+     if (cmap.rgba == gray_colors) {
 	  if (verbose)
 	       printf("Using built-in gray colormap.\n");
      }
@@ -398,8 +399,8 @@ int main(int argc, char **argv)
      free(contour_fname);
      free(data_name);
 
-     if (cmap.rgb != gray_colors)
-	  free(cmap.rgb);
+     if (cmap.rgba != gray_colors)
+	  free(cmap.rgba);
      free(cmap_fname);
      free(colormap);
 
