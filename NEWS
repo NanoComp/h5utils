@@ -1,3 +1,11 @@
+h5utils 1.2:  (12/31/99)
+
+  * Added h5tov5d program for converting to Vis5d format.
+
+  * Improved installation; h5read.oct now goes into the sitewide Octave
+    plugins directory, and things work correctly when only some of the
+    utilities are compiled.
+
 h5utils 1.1:  (12/6/99)
 
   * Added h5totxt program for exporting 2d slices of HDF5 files to text
