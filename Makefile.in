@@ -47,7 +47,7 @@ dist:
 	rm -rf $(distdir)
 
 clean:
-	rm -f $(OBJ_h5topng) $(TARGETS) core a.out octave-core
+	rm -f $(OBJ_h5topng) h5read.o $(TARGETS) core a.out octave-core
 
 distclean: clean
 	rm -f config.cache Makefile config.log config.status config.h
