@@ -24,7 +24,18 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
+#include "h5utils.h"
+
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5utils error: %s\n", msg); exit(EXIT_FAILURE); } }
+
+char *my_strdup(const char *s)
+{
+     char *sd = (char *) malloc(sizeof(char) * (strlen(s) + 1));
+     CHECK(sd, "out of memory");
+     strcpy(sd, s);
+     return sd;
+}
 
 char *replace_suffix(const char *s, const char *old_suff, const char *new_suff)
 {

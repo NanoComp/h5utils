@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <unistd.h>
 
@@ -63,7 +64,6 @@ int main(int argc, char **argv)
      int rank = -1, dims[MAX_RANK], N = 1, nrows = 0;
      int ncols = -1, cur_ncols = 0;
      int read_newline = 0;
-     int err;
      int verbose = 0;
      int transpose = 0;
      int append = 0;
@@ -88,10 +88,7 @@ int main(int argc, char **argv)
 		   break;
 	      case 'd':
 		   free(data_name);
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      case 'n':
 	      {
@@ -128,11 +125,8 @@ int main(int argc, char **argv)
      h5_fname = split_fname(argv[optind], &dname);
      if (!dname[0])
 	  dname = data_name;
-     if (!dname) {
-	  dname = (char *) malloc(sizeof(char) * (strlen("data") + 1));
-	  CHECK(dname, "out of memory");
-	  strcpy(dname, "data");
-     }
+     if (!dname)
+	  dname = my_strdup("data");
 
      data = (double *) malloc(sizeof(double) * N);
      CHECK(data, "out of memory");

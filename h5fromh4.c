@@ -76,10 +76,7 @@ int main(int argc, char **argv)
 		   break;
 	      case 'd':
 		   free(data_name);
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      case 'o':
 		   free(h5_fname);
@@ -113,9 +110,7 @@ int main(int argc, char **argv)
 	     a single HDF5 file) and if there is more than one filename
 	     argument, use the filename (minus ".hdf") as the dataset name. */
 	  if (h5_fname && optind + 1 < argc) {
-	       dname = (char *) malloc(sizeof(char) * (strlen(h4_fname)+1));
-	       CHECK(dname, "out of memory");
-	       strcpy(dname, h4_fname);
+	       dname = my_strdup(h4_fname);
 	       /* remove ".hdf" from dataset name: */
 	       if (strlen(dname) >= strlen(".hdf") &&
 		   !strcmp(dname + strlen(dname)-strlen(".hdf"),
@@ -124,11 +119,8 @@ int main(int argc, char **argv)
 	  }
 	  else {
 	       dname = data_name;
-	       if (!dname) {
-		    dname = (char *) malloc(sizeof(char) * (strlen("data")+1));
-		    CHECK(dname, "out of memory");
-		    strcpy(dname, "data");
-	       }
+	       if (!dname)
+		    dname = my_strdup("data");
 	  }
 	  
 	  if (verbose)

@@ -71,9 +71,7 @@ int main(int argc, char **argv)
      char *sep;
      int ifile;
 
-     sep = (char*) malloc(sizeof(char) * 2);
-     CHECK(sep, "out of memory");
-     strcpy(sep, ",");
+     sep = my_strdup(",");
 
      while ((c = getopt(argc, argv, "ho:x:y:z:t:0ad:vTs:.:V")) != -1)
 	  switch (c) {
@@ -95,24 +93,15 @@ int main(int argc, char **argv)
 		   break;
 	      case 'o':
 		   free(txt_fname);
-                   txt_fname = (char*) malloc(sizeof(char) *
-                                              (strlen(optarg) + 1));
-                   CHECK(txt_fname, "out of memory");
-                   strcpy(txt_fname, optarg);
+                   txt_fname = my_strdup(optarg);
                    break;
 	      case 's':
 		   free(sep);
-		   sep = (char*) malloc(sizeof(char) *
-					(strlen(optarg) + 1));
-		   CHECK(sep, "out of memory");
-		   strcpy(sep, optarg);
+		   sep = my_strdup(optarg);
 		   break;
 	      case 'd':
 		   free(data_name);
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      case '.':
 		   dec = atoi(optarg);

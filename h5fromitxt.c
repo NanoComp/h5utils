@@ -118,10 +118,7 @@ int main(int argc, char **argv)
 		   break;
 	      case 'd':
 		   free(data_name);
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      case 'n':
 		   rank = get_size_arg(dims, optarg);
@@ -147,11 +144,8 @@ int main(int argc, char **argv)
      h5_fname = split_fname(argv[optind], &dname);
      if (!dname[0])
 	  dname = data_name;
-     if (!dname) {
-	  dname = (char *) malloc(sizeof(char) * (strlen("data") + 1));
-	  CHECK(dname, "out of memory");
-	  strcpy(dname, "data");
-     }
+     if (!dname)
+	  dname = my_strdup("data");
 
      data = (double *) malloc(sizeof(double) * N);
      CHECK(data, "out of memory");
@@ -260,18 +254,18 @@ int main(int argc, char **argv)
 	  a.data[i] = fill_val;
 
      for (i = 0; i < nrows; ++i) {
-	  int index = 0;
+	  int idx = 0;
 	  for (j = 0; j < rank; ++j) {
 	       int id = data[i * ncols + j] + 0.5;
 	       if (id < coord_min[j] || id > coord_max[j] ||
 		   id - coord_min[j] >= dims[j]) {
-		    index = -1;
+		    idx = -1;
 		    break;
 	       }
-	       index = index * dims[j] + id - coord_min[j];
+	       idx = idx * dims[j] + id - coord_min[j];
 	  }
-	  if (index >= 0 && index < a.N)
-	       a.data[index] = data[i * ncols + ncols - 1];
+	  if (idx >= 0 && idx < a.N)
+	       a.data[idx] = data[i * ncols + ncols - 1];
      }
 
      if (transpose)

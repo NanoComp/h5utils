@@ -354,16 +354,10 @@ int main(int argc, char **argv)
 		   store_bytes = 4;
 		   break;
 	      case 'o':
-		   v5d_fname = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(v5d_fname, "out of memory");
-		   strcpy(v5d_fname, optarg);
+		   v5d_fname = my_strdup(optarg);
 		   break;
 	      case 'd':
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      default:
 		   fprintf(stderr, "Invalid argument -%c\n", c);

@@ -135,14 +135,6 @@ colormap_t copy_colormap(const colormap_t c0)
      return c;
 }
 
-static char *my_strdup(const char *s)
-{
-     char *sd = (char *) malloc(sizeof(char) * (strlen(s) + 1));
-     CHECK(sd, "out of memory");
-     strcpy(sd, s);
-     return sd;
-}
-
 colormap_t get_cmap(const char *colormap, int invert, double scale_alpha,
 		    int verbose)
 {

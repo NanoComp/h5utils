@@ -229,17 +229,11 @@ int main(int argc, char **argv)
 		   invert = 1;
 		   break;
 	      case 'o':
-		   vtk_fname = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(vtk_fname, "out of memory");
-		   strcpy(vtk_fname, optarg);
+		   vtk_fname = my_strdup(optarg);
 		   combine = 1;
 		   break;
 	      case 'd':
-		   data_name = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(data_name, "out of memory");
-		   strcpy(data_name, optarg);
+		   data_name = my_strdup(optarg);
 		   break;		   
 	      default:
 		   fprintf(stderr, "Invalid argument -%c\n", c);

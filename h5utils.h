@@ -23,6 +23,7 @@
 #ifndef H5UTILS_H
 #define H5UTILS_H
 
+extern char *my_strdup(const char *s);
 extern char *replace_suffix(const char *s,
 			    const char *old_suff, const char *new_suff);
 extern char *split_fname(char *fname, char **data_name);
