@@ -44,7 +44,7 @@ static void convert_row(int png_width, int data_width,
 
      for (i = 0; i < png_width; ++i) {
 	  REAL y = i * scaley + offsety;
-	  int n = (int) (y + 0.5);
+	  int n = ((int) (y + 0.5)) % data_width;
 	  double delta = y - n;
 	  REAL val, maskval = 0.0;
 
@@ -112,23 +112,20 @@ static void convert_row(int png_width, int data_width,
 
 static void init_palette(png_colorp palette, colormap_t colormap)
 {
+     const int mid = 0.5 * 254;
      int i;
-     int mid = 0.5 * 254;
 
-     if (colormap == BLUE_WHITE_RED) {
-	  for (i = 0; i < mid; ++i) {
-	       palette[i].green = palette[i].red = i * 254.0 / mid;
-	       palette[i].blue = 254;
-	  }
-	  for (i = mid; i < 255; ++i) {
-	       palette[i].green = palette[i].blue = 
-		    (254 - i) * 254.0 / (254 - mid);
-	       palette[i].red = 254;
-	  }
-     } else {
-	  /* default to grayscale palette: */
-	  for (i = 0; i < 255; ++i)
-	       palette[i].green = palette[i].blue = palette[i].red = 255 - i;
+     for (i = 0; i < 255; ++i) {
+	  int j = i * 1.0/254 * (colormap.n - 1);
+	  int j2 = (j == colormap.n - 1) ? j : j + 1;
+	  float dj = i * 1.0/254 * (colormap.n - 1) - j;
+	  float r,g,b;
+	  r = colormap.rgb[j].r * (1-dj) + colormap.rgb[j2].r * dj;
+	  g = colormap.rgb[j].g * (1-dj) + colormap.rgb[j2].g * dj;
+	  b = colormap.rgb[j].b * (1-dj) + colormap.rgb[j2].b * dj;
+	  palette[i].red = r * 255 + 0.5;
+	  palette[i].green = g * 255 + 0.5;
+	  palette[i].blue = b * 255 + 0.5;
      }
 
      /* set mask color: */

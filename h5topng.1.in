@@ -104,23 +104,29 @@ pixels, depending upon the color map.
 Transpose the data (interchange the image axes).  By default, no
 transposition is done.
 .TP
-.B -c
-Use a color map going from blue to white to red, with white in the center,
-instead of the default color map which is a grayscale ramp from white to
-black.  If you use the
-.B -c
-option, you may also want to use the
-.B -mM
-options so that the center of the color scale (white) corresponds to
-something like zero (if your data consists of positive and negative
-values).  In this case, you would want to use values of equal magnitude
-and opposite sign for the parameters to the
-.B -m
-and 
-.B -M
-options.  See also the
+.B -c \fIcolormap\fR
+Use a color map 
+.I colormap
+instead of the default color map 
+.B gray
+(a grayscale ramp from white to black.)
+.I colormap
+is normally one of the colormap files provided with 
+.I h5topng
+(in the @datadir_val@/h5utils/colormaps directory), or
+can be the name of a color map file.  A color map file is a sequence of whitespace-separated R G B triples, where each value is in the range 0.0 to 1.0 and indicates the fraction of red/green/blue.  The colors in the color map are linearly interpolated as necessary to provide an 8-bit color palette.
+
+Two useful alternate color maps are
+.B hot
+(black-red-yellow-white) and
+.B bluered
+(blue-white-red).  If you use the
+.B bluered
+color map for data with positive and negative values, you may also want
+to use the
 .B -Z
-option.
+option so that the center of the color scale (white) corresponds to
+zero.
 .TP
 .B -r
 Reverse the ordering of the color map.
@@ -140,7 +146,9 @@ they were
 .I min
 or
 .I max
-respectively.
+respectively.  See also the
+.B -Z
+option.
 .TP
 \fB\-C\fR \fIfile\fR, \fB\-b\fR \fIval\fR
 Superimpose contour outlines from the first dataset in the
@@ -151,7 +159,7 @@ dataset, on all of the output images.  You can use the syntax
 to specify a particular dataset within the file.  The contour outlines
 are around a value of
 .I val
-(defaults to median value in \fIfile\fR).
+(defaults to middle of value range in \fIfile\fR).
 .TP
 \fB\-d\fR \fIname\fR
 Use dataset

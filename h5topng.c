@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 #include <unistd.h>
 
@@ -33,6 +34,9 @@
 #include "writepng.h"
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5topng error: %s\n", msg); exit(EXIT_FAILURE); } }
+
+#define CMAP_DEFAULT "gray"
+#define CMAP_DIR DATADIR "/h5utils/colormaps/"
 
 void usage(FILE *f)
 {
@@ -50,7 +54,7 @@ void usage(FILE *f)
 	     "     -S <s> : equivalent to -X <s> -Y <s>\n"
 	     "  -s <skew> : skew axes by <skew> degrees [ default: 0 ]\n"
 	     "         -T : transpose the data [default: no]\n"
-	     "         -c : blue-white-red palette instead of grayscale\n"
+	     "  -c <cmap> : use colormap <cmap> [default: " CMAP_DEFAULT "]\n"
 	     "         -r : reverse color map [default: no]\n"
 	     "         -Z : center color scale at zero [default: no]\n"
 	     "   -m <min> : set bottom of color scale to data value <min>\n"
@@ -90,6 +94,46 @@ static char *split_fname(char *fname, char **data_name)
      return filename;
 }
 
+static colormap_t load_colormap(FILE *f, int verbose)
+{
+     colormap_t cmap = {0, NULL};
+     int nalloc = 0;
+     float r,g,b;
+     int c;
+     
+     /* read initial comment lines, and echo if verbose */
+     do {
+	  while (isspace(c = fgetc(f)));
+	  if (c == '#' || c == '%') {
+	       while (isspace(c = fgetc(f)) && c != '\n' && c != EOF);
+	       if (c != EOF) ungetc(c, f);
+	       while ('\n' != (c = fgetc(f)) && c != EOF)
+		    if (verbose) 
+			 putchar(c);
+	       if (verbose)
+		    putchar('\n');
+	  }
+     } while (c == '\n');
+     if (c != EOF) ungetc(c, f);
+
+     while (3 == fscanf(f, "%g %g %g", &r, &g, &b)) {
+	  if (cmap.n >= nalloc) {
+	       nalloc = (1 + nalloc) * 2;
+	       cmap.rgb = realloc(cmap.rgb, nalloc * sizeof(rgb_t));
+	       CHECK(cmap.rgb, "out of memory");
+	  }
+	  cmap.rgb[cmap.n].r = r;
+	  cmap.rgb[cmap.n].g = g;
+	  cmap.rgb[cmap.n].b = b;
+	  cmap.n++;
+     }
+     cmap.rgb = realloc(cmap.rgb, cmap.n * sizeof(rgb_t));
+     CHECK(cmap.n >= 1, "invalid colormap file");
+     if (verbose)
+	  printf("%d color entries read from colormap file.\n", cmap.n);
+     return cmap;
+}
+
 int main(int argc, char **argv)
 {
      arrayh5 a, contour_data;
@@ -104,7 +148,9 @@ int main(int argc, char **argv)
      int slicedim = 2, islice = 0;
      int err;
      int nx, ny;
-     colormap_t colormap = GRAYSCALE;
+     char *colormap = NULL, *cmap_fname = NULL;
+     FILE *cmap_f = NULL;
+     colormap_t cmap;
      int verbose = 0;
      int transpose = 0;
      int zero_center = 0;
@@ -113,7 +159,11 @@ int main(int argc, char **argv)
      double skew = 0.0;
      int ifile;
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:S:TrZs:V")) != -1)
+     colormap = (char*) malloc(sizeof(char) * (strlen(CMAP_DEFAULT) + 1));
+     CHECK(colormap, "out of memory");
+     strcpy(colormap, CMAP_DEFAULT);
+
+     while ((c = getopt(argc, argv, "ho:x:y:z:c:m:M:C:b:d:vX:Y:S:TrZs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -168,7 +218,11 @@ int main(int argc, char **argv)
 		   slicedim = 2;
 		   break;
 	      case 'c':
-		   colormap = BLUE_WHITE_RED;
+		   free(colormap);
+		   colormap = (char*) malloc(sizeof(char) *
+					     (strlen(optarg) + 1));
+                   CHECK(colormap, "out of memory");
+                   strcpy(colormap, optarg);
 		   break;
 	      case 'm':
 		   min = atof(optarg);
@@ -203,6 +257,26 @@ int main(int argc, char **argv)
 	  usage(stderr);
 	  return EXIT_FAILURE;
      }
+
+     cmap_fname = (char *) malloc(sizeof(char) *
+				  (strlen(CMAP_DIR) + strlen(colormap) + 1));
+     CHECK(cmap_fname, "out of memory");
+     strcpy(cmap_fname, CMAP_DIR); strcat(cmap_fname, colormap);
+     if (!(cmap_f = fopen(cmap_fname, "r"))) {
+	  free(cmap_fname);
+	  cmap_fname = (char *) malloc(sizeof(char) * (strlen(colormap) + 1));
+	  CHECK(cmap_fname, "out of memory");
+	  strcpy(cmap_fname, colormap);
+	  if (!(cmap_f = fopen(cmap_fname, "r"))) {
+	       fprintf(stderr, "Could not open colormap \"%s\"\n", colormap);
+	       exit(EXIT_FAILURE);
+	  }
+     }
+     if (verbose)
+	  printf("Using colormap \"%s\" in file \"%s\".\n",
+		 colormap, cmap_fname);
+     cmap = load_colormap(cmap_f, verbose);
+     fclose(cmap_f);
 
      if (contour_fname) {
 	  int cnx, cny;
@@ -295,7 +369,7 @@ int main(int argc, char **argv)
 	  writepng(png_fname, nx, ny, transpose, skew,
 		   scaley, scalex, a.data, 
 		   contour_fname ? contour_data.data : NULL, mask_thresh,
-		   min, max, invert, colormap);
+		   min, max, invert, cmap);
 
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
@@ -305,6 +379,10 @@ int main(int argc, char **argv)
 	  arrayh5_destroy(contour_data);
      free(contour_fname);
      free(data_name);
+
+     free(cmap.rgb);
+     free(cmap_fname);
+     free(colormap);
 
      return EXIT_SUCCESS;
 }

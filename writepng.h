@@ -35,9 +35,13 @@ typedef float REAL;
 typedef double REAL;
 #endif
 
-typedef enum {
-     GRAYSCALE,
-     BLUE_WHITE_RED
+typedef struct {
+     float r, g, b;
+} rgb_t;
+
+typedef struct {
+     int n;
+     rgb_t *rgb;
 } colormap_t;
 
 void writepng(char *filename,

@@ -6,6 +6,7 @@ LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
 INSTALL = @INSTALL@
 prefix = @prefix@
+datadir = @datadir@
 # c.f. AC_ARG_PROGRAM autoconf docs:
 transform=@program_transform_name@
 @SET_MAKE@
@@ -70,13 +71,23 @@ h5tov5d.o: h5tov5d.c
 
 ###########################################################################
 
-h5topng-install:
+COLORMAPS = autumn bluered bone colorcube cool copper flag gray hot	\
+hsv jet lines pink prism spring summer vga winter
+
+colormaps-install:
+	$(INSTALL) -d $(datadir)/h5utils/colormaps
+	for cmap in $(COLORMAPS); $(INSTALL) -m 0644 $$cmap $(datadir)/h5utils/colormaps || fail=yes; done && test -z "$$fail"
+
+datadir-uninstall:
+	rm -rf $(datadir)/h5utils
+
+h5topng-install: colormaps-install
 	$(INSTALL) -d $(prefix)/bin
 	$(INSTALL) -d $(prefix)/man/man1
 	$(INSTALL) -m 0755 -s h5topng $(prefix)/bin/`echo h5topng|sed '$(transform)'`
 	$(INSTALL) -m 0644 h5topng.1 $(prefix)/man/man1
 
-h5topng-uninstall:
+h5topng-uninstall: datadir-uninstall
 	rm -f $(prefix)/bin/h5topng
 	rm -f $(prefix)/man/man1/h5topng.1
 

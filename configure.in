@@ -172,4 +172,17 @@ fi
 
 ###########################################################################
 
-AC_OUTPUT(Makefile)
+# Store datadir (e.g. /usr/local/share) in DATADIR #define.
+
+# Requires some hackery to actually get this value...
+save_prefix=$prefix
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+eval datadir_val=$datadir
+prefix=$save_prefix
+
+AC_DEFINE_UNQUOTED(DATADIR, "$datadir_val", [datadir installation prefix])
+AC_SUBST(datadir_val)
+
+###########################################################################
+
+AC_OUTPUT(Makefile h5topng.1)
