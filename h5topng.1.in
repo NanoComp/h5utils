@@ -202,19 +202,26 @@ dataset, on all of the output images, using the colormap
 .I colormap
 with opacity (from 0 for completely transparent to 1 for completely opaque)
 .I opacity
-multiplied by the opacity values in the colormap.
-You can use the syntax
+multiplied by the opacity (alpha) values in the colormap.  You can use
+the syntax
 .I file:dataset
 to specify a particular dataset within the file.
 
 Some predefined colormaps that work particularly well for this feature
-are \fB\yellow\fR (transparent white to opaque yellow) \fB\gray\fR
-(transparent white to opaque black), \fB\yarg\fR (transparent black to
-opaque white), \fB\green\fR (transparent white to opaque green), and
-\fB\bluered\fR (opaque blue to transparent white to opaque red).  You
-can prepend "-" to the colormap name to reverse the colormap order.
-(See also \fB\-c\fR, above.)  The default for \fB\-a\fR is yellow:0.3
-(yellow colormap multiplied by 30% opacity).
+are 
+.B yellow
+(transparent white to opaque yellow) 
+.B gray
+(transparent white to opaque black),
+.B yarg
+(transparent black to opaque white), 
+.B green
+(transparent white to opaque green), and
+.B bluered
+(opaque blue to transparent white to opaque red).  You can prepend "-"
+to the colormap name to reverse the colormap order.  (See also
+\fB\-c\fR, above.)  The default for \fB\-a\fR is yellow:0.3 (yellow
+colormap multiplied by 30% opacity).
 .TP
 \fB\-d\fR \fIname\fR
 Use dataset
