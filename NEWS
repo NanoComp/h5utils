@@ -1,3 +1,27 @@
+h5utils 1.8 (5/21/04)
+
+  * New -A and -a options for h5topng to allow translucent overlays
+    from one file onto another (an alternative or complement to the
+    -C contour-overlay option).
+
+  * h5topng uses 24-bit direct color by default (use -8 option for
+    old 8-bit behavior).
+
+  * h5topng uses columns/rows for x/y by default (use -T to swap),
+    the opposite of the old behavior.
+
+  * There is no default -z 0 slice dimension in h5topng/h5totxt any more.
+    You must specify a slice for 3+ dimensional data in h5topng.
+    h5totxt dumps the whole data file by default unless one or more
+    slices are specified.
+
+  * Support specifying multiple slice dimensions for 4+ dimensional
+    datasets, with new "-t" option to indicate final dimension.
+
+  * Slices are also supported now in h5tovtk and h5tov5d.
+
+  * New -. option in h5totxt to specify number of significant digits.
+
 h5utils 1.7.1 (3/16/02)
 
   * Fixed array overrun in h5topng that caused a floating-point exception
