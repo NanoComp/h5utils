@@ -20,12 +20,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define COPYRIGHT \
+"Copyright (c) 1999 Massachusetts Institute of Technology\n"\
+"\n"\
+"Permission is hereby granted, free of charge, to any person obtaining\n"\
+"a copy of this software and associated documentation files (the\n"\
+"\"Software\"), to deal in the Software without restriction, including\n"\
+"without limitation the rights to use, copy, modify, merge, publish,\n"\
+"distribute, sublicense, and/or sell copies of the Software, and to\n"\
+"permit persons to whom the Software is furnished to do so, subject to\n"\
+"the following conditions:\n"\
+"\n"\
+"The above copyright notice and this permission notice shall be\n"\
+"included in all copies or substantial portions of the Software.\n"\
+"\n"\
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n"\
+"EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\n"\
+"MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\n"\
+"IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\n"\
+"CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\n"\
+"TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\n"\
+"SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <unistd.h>
 
+#include "config.h"
 #include "arrayh5.h"
 #include "writepng.h"
 
@@ -36,8 +60,9 @@ void usage(FILE *f)
      fprintf(f, "Usage: h5topng [options] [<filenames>]\n"
 	     "Options:\n"
 	     "         -h : this help message\n"
+             "         -V : print version number and copyright\n"
 	     "         -v : verbose output\n"
-	     "  -o <file> : output to <file>\n"
+	     "  -o <file> : output to <file> (first input file only)\n"
 	     "    -x <ix> : take x=<ix> slice of data\n"
 	     "    -y <iy> : take y=<iy> slice of data\n"
 	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
@@ -47,8 +72,8 @@ void usage(FILE *f)
 	     "         -T : transpose the data [default: no]\n"
 	     "         -c : blue-white-red palette instead of grayscale\n"
 	     "         -r : reverse color map [default: no]\n"
-	     "   -m <min> : set bottom of color scale to <min>\n"
-	     "   -M <max> : set top of color scale to <max>\n"
+	     "   -m <min> : set bottom of color scale to data value <min>\n"
+	     "   -M <max> : set top of color scale to data value <max>\n"
 	     "  -C <file> : superimpose contour outlines from <file>\n"
 	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
 	     "  -d <name> : use dataset <name> in the input file (default: first dataset)\n"
@@ -77,10 +102,14 @@ int main(int argc, char **argv)
      double skew = 0.0;
      int ifile;
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:Trs:")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:cm:M:C:b:d:vX:Y:Trs:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
+		   return EXIT_SUCCESS;
+	      case 'V':
+		   printf("h5topng " VERSION " by Steven G. Johnson\n" 
+			  COPYRIGHT);
 		   return EXIT_SUCCESS;
 	      case 'v':
 		   verbose = 1;
@@ -210,6 +239,12 @@ int main(int argc, char **argv)
 		    min = a_min;
 	       if (!max_set)
 		    max = a_max;
+	       if (min > max) {
+		    invert = !invert;
+		    a_min = min;
+		    min = max;
+		    max = a_min;
+	       }
 	  }
 	  
 	  nx = a.dims[0];

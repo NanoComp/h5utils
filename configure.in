@@ -39,7 +39,7 @@ else
 	H5TOPNG_TARGET=""
 fi
 
-AC_CHECK_LIB(hdf5, H5Fopen, LIBS="-lhdf5 $(LIBS)",
+AC_CHECK_LIB(hdf5, H5Fopen, LIBS="-lhdf5 $LIBS",
 	     AC_MSG_ERROR([hdf5 libraries are required for compilation]))
 
 H5READ_TARGET=h5read.oct

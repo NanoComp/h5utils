@@ -1,3 +1,5 @@
 /* config.h.in: preprocessor definitions output by the configure
                 script to produce config.h */
 
+/* define this to the version string */
+#undef VERSION
