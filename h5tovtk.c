@@ -57,6 +57,11 @@ void usage(FILE *f)
 	     "   -M <max> : set top of scale for 1/2 byte encoding\n"
 	     "         -Z : center scale at zero for 1/2 byte encoding\n"
 	     "         -r : invert scale & data values\n"
+	     "    -x <ix> : take x=<ix> slice of data\n"
+	     "    -y <iy> : take y=<iy> slice of data\n"
+	     "    -z <iz> : take z=<iz> slice of data\n"
+	     "    -t <it> : take t=<it> slice of data's last dimension\n"
+	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n"
 	  );
@@ -157,11 +162,13 @@ int main(int argc, char **argv)
      int invert = 0;
      double min = 0, max = 0;
      int min_set = 0, max_set = 0;
-     int verbose = 0, transpose = 0, combine = 0;
-     int nx, ny, nz, na;
+     int verbose = 0, combine = 0;
+     int slicedim[4] = {NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM};
+     int islice[4], center_slice[4] = {0,0,0,0};
+     int nx = 0, ny = 0, nz = 0, na;
      int store_bytes = 4, fix_byte_order = 1;
 
-     while ((c = getopt(argc, argv, "ho:d:vV124mMZran")) != -1)
+     while ((c = getopt(argc, argv, "ho:d:vV124mMZranx:y:z:t:0")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -172,6 +179,22 @@ int main(int argc, char **argv)
 		   return EXIT_SUCCESS;
 	      case 'v':
 		   verbose = 1;
+		   break;
+	      case 'x':
+		   islice[0] = atoi(optarg);
+		   slicedim[0] = 0;
+		   break;
+	      case 'y':
+		   islice[1] = atoi(optarg);
+		   slicedim[1] = 1;
+		   break;
+	      case 'z':
+		   islice[2] = atoi(optarg);
+		   slicedim[2] = 2;
+		   break;
+	      case 't':
+		   islice[3] = atoi(optarg);
+		   slicedim[3] = LAST_SLICE_DIM;
 		   break;
 	      case 'n':
 		   fix_byte_order = 0;
@@ -242,9 +265,11 @@ int main(int argc, char **argv)
           if (!dname[0])
                dname = data_name;
 
-	  err = arrayh5_read(&a[ia], h5_fname, dname, &found_dname, -1, 0, 0);
+	  err = arrayh5_read(&a[ia], h5_fname, dname, &found_dname,
+			     4, slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a[ia].rank >= 1, "data must have at least one dimension");
+	  CHECK(a[ia].rank <= 3, "data can have at most 3 dimensions (try taking a slice");
 	  
 	  CHECK(!combine || !ia || arrayh5_conformant(a[ia], a[0]),
 		"all arrays must be conformant to combine them");

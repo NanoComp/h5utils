@@ -6,7 +6,8 @@ colormaps/summer colormaps/vga colormaps/winter
 
 EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS)
 
-bin_PROGRAMS = h5totxt h5fromtxt h5fromitxt h5tovtk @MORE_H5UTILS@
+noinst_PROGRAMS = h5fromitxt
+bin_PROGRAMS = h5totxt h5fromtxt h5tovtk @MORE_H5UTILS@
 EXTRA_PROGRAMS = h5topng h5tov5d h5fromh4
 
 dist_man_MANS = h5totxt.1 h5fromtxt.1 h5tovtk.1 @MORE_H5UTILS_MANS@

@@ -48,6 +48,11 @@ void usage(FILE *f)
              "         -V : print version number and copyright\n"
 	     "         -v : verbose output\n"
 	     "         -T : transposed output dimensions\n"
+	     "    -x <ix> : take x=<ix> slice of data\n"
+	     "    -y <iy> : take y=<iy> slice of data\n"
+	     "    -z <iz> : take z=<iz> slice of data\n"
+	     "    -t <it> : take t=<it> slice of data's last dimension\n"
+	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "  -o <file> : output datasets from all input files to <file>\n"
 "   -1,-2,-4 : number of bytes per data point to use in output (default: 1)\n"
 	     "              (fewer bytes is faster, but has less resolution)\n"
@@ -61,6 +66,8 @@ void usage(FILE *f)
    Kellum, Brian Paul, Dave Santek, and Andre Battaiola, and is
    distributed under the GNU General Public License. */
 void output_v5d(char *v5d_fname, char *data_label,
+		int nslicedim, const int *slicedim,
+		const int *islice, const int *center_slice,
 		int store_bytes, int transpose,
 		char **h5_fnames, int num_h5, int join)
 {
@@ -90,23 +97,25 @@ void output_v5d(char *v5d_fname, char *data_label,
 	  int err;
 	  fname = split_fname(h5_fnames[ifile], &data_name);
 	  if (!data_name[0]) data_name = data_label;
-	  err = arrayh5_read(&a, fname, data_name, NULL, -1, 0, 0);
+	  err = arrayh5_read(&a, fname, data_name, NULL, 
+			     nslicedim, slicedim, islice, center_slice);
 	  free(fname);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  CHECK(a.rank <= 5, "data cannot have more than 5 dimensions");
 
+
 	  /* if the data is 4 dimensional, express that by using
 	     different times and/or variables */
-	  NumTimes = a.rank < 4 ? 1 : a.dims[a.rank - 4];
+	  NumTimes = a.rank < 4 ? 1 : a.dims[a.rank - 1];
 	  CHECK(NumTimes <= MAXTIMES, "too many time steps");
-	  firstdim = a.rank <= 3 ? 0 : a.rank - 3;
+	  firstdim = a.rank <= 4 ? 0 : a.rank - 4;
 
 	  /* If the data is 5 dimensional, express that by using different
 	     variables.  Alternatively, if we are joining, the different
 	     variables are the different files; in that case, the data
 	     cannot be 5d. */
-	  NumVars = a.rank < 5 ? 1 : a.dims[a.rank - 5];
+	  NumVars = a.rank < 5 ? 1 : a.dims[0];
 	  if (join) {
 	       CHECK(NumVars == 1, "cannot join 5d datasets");
 	       NumVars = num_h5;
@@ -156,12 +165,14 @@ void output_v5d(char *v5d_fname, char *data_label,
 		    /* we don't really have to read the whole array;
 		       if we called HDF5 routines directly, we could just
 		       get the dimensions...oh well */
-		    err = arrayh5_read(&a, fname, data_name, NULL, -1, 0, 0);
+		    err = arrayh5_read(&a, fname, data_name, NULL, 
+				       nslicedim, slicedim,
+				       islice, center_slice);
 		    CHECK(!err, arrayh5_read_strerror[err]);
 		    free(fname);
 		    
-		    numTimes = a.rank < 4 ? 1 : a.dims[a.rank - 4];
-		    fdim = a.rank <= 3 ? 0 : a.rank - 3;
+		    numTimes = a.rank < 4 ? 1 : a.dims[a.rank - 1];
+		    fdim = a.rank <= 4 ? 0 : a.rank - 4;
 		    if (!transpose) {
 			 nr = fdim >= a.rank ? 1 : a.dims[fdim];
 			 nc = fdim+1 >= a.rank ? 1 : a.dims[fdim+1];
@@ -181,7 +192,8 @@ void output_v5d(char *v5d_fname, char *data_label,
 	       /* read first array back in */
 	       fname = split_fname(h5_fnames[ifile], &data_name);
 	       if (!data_name[0]) data_name = data_label;
-	       err = arrayh5_read(&a, fname, data_name, NULL, -1, 0, 0);
+	       err = arrayh5_read(&a, fname, data_name, NULL,
+				  nslicedim, slicedim, islice, center_slice);
 	       CHECK(!err, arrayh5_read_strerror[err]);
 	       free(fname);
 	  }
@@ -243,8 +255,8 @@ void output_v5d(char *v5d_fname, char *data_label,
 
 	  for (iv = join ? ifile : 0; iv < (join ? ifile + 1 : NumVars); ++iv)
 	       for (it = 0; it < NumTimes; ++it) {
-		    double *d = a.data + (((join ? 0 : iv) * NumTimes + it)
-					  * Nr * Nc * Nl[0]);
+		    double *d = a.data + it +
+			 (join ? 0 : iv) * NumTimes * Nr * Nc * Nl[0];
 
 		    if (!transpose) {
 			 int ir, ic, il;
@@ -252,12 +264,13 @@ void output_v5d(char *v5d_fname, char *data_label,
 			      for (ic = 0; ic < Nc; ++ic)
 				   for (il = 0; il < Nl[0]; ++il)
 					g[ir + Nr * (ic + Nc * il)] =
-					     d[il + Nl[0] * (ic + Nc * ir)];
+					     d[(il + Nl[0] * (ic + Nc * ir))
+					       * NumTimes];
 		    }
 		    else {
 			 int id;
 			 for (id = 0; id < Nr * Nc * Nl[0]; ++id)
-			      g[id] = d[id];
+			      g[id] = d[id * NumTimes];
 		    }
 		    CHECK(v5dWrite(it + 1, iv + 1, g),
 			  "error writing v5d output"); 
@@ -282,9 +295,11 @@ int main(int argc, char **argv)
      extern int optind;
      int c;
      int verbose = 0, transpose = 0;
+     int slicedim[4] = {NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM};
+     int islice[4], center_slice[4] = {0,0,0,0};
      int store_bytes = 1;
 
-     while ((c = getopt(argc, argv, "ho:d:vTV124")) != -1)
+     while ((c = getopt(argc, argv, "ho:d:vTV124x:y:z:t:0")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -310,6 +325,25 @@ int main(int argc, char **argv)
 	      case 'T':
 		   transpose = 1;
 		   break;
+	      case 'x':
+		   islice[0] = atoi(optarg);
+		   slicedim[0] = 0;
+		   break;
+	      case 'y':
+		   islice[1] = atoi(optarg);
+		   slicedim[1] = 1;
+		   break;
+	      case 'z':
+		   islice[2] = atoi(optarg);
+		   slicedim[2] = 2;
+		   break;
+	      case 't':
+		   islice[3] = atoi(optarg);
+		   slicedim[3] = LAST_SLICE_DIM;
+		   break;
+              case '0':
+                   center_slice[0] = center_slice[1] = center_slice[2] = 1;
+                   break;
 	      case '1':
 		   store_bytes = 1;
 		   break;
@@ -341,7 +375,9 @@ int main(int argc, char **argv)
 	  return EXIT_FAILURE;
      }
 
-     output_v5d(v5d_fname, data_name, store_bytes, transpose,
+     output_v5d(v5d_fname, data_name, 
+		4, slicedim, islice, center_slice,
+		store_bytes, transpose,
 		argv + optind, argc - optind, v5d_fname != NULL);
 
      if (data_name)

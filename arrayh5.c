@@ -171,6 +171,9 @@ static herr_t find_dataset(hid_t group_id, const char *name, void *d)
      return 0;
 }
 
+typedef enum { NO_ERROR = 0, OPEN_FAILED, NO_DATA, READ_FAILED, SLICE_FAILED,
+	     INVALID_SLICE, INVALID_RANK, OPEN_DATA_FAILED } arrayh5_err;
+
 const char arrayh5_read_strerror[][100] = {
      "no error",
      "error opening HD5 file",
@@ -184,13 +187,15 @@ const char arrayh5_read_strerror[][100] = {
 
 int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 		 char **dataname,
-		 int slicedim, int islice, int center_slice)
+		 int nslicedims, const int *slicedim_, const int *islice_,
+		 const int *center_slice)
 {
      hid_t file_id = -1, data_id = -1, space_id = -1;
      char *dname = NULL;
-     int err = 0;
+     int err = NO_ERROR;
      hsize_t i, rank, *dims_copy, *maxdims;
-     int *dims;
+     int *islice = 0, *slicedim = 0;
+     int *dims = 0;
 
      CHECK(a, "NULL array passed to arrayh5_read");
      a->dims = NULL;
@@ -198,7 +203,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 
      file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
      if (file_id < 0) {
-	  err = 1;
+	  err = OPEN_FAILED;
 	  goto done;
      }
  
@@ -208,21 +213,21 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
      }
      else {
 	  if (H5Giterate(file_id, "/", NULL, find_dataset, &dname) <= 0) {
-	       err = 2;
+	       err = NO_DATA;
 	       goto done;
 	  }
      }
 
      data_id = H5Dopen(file_id, dname);
      if (data_id < 0) {
-	  err = 7;
+	  err = OPEN_DATA_FAILED;
 	  goto done;
      }
 
      space_id = H5Dget_space(data_id);
      rank = H5Sget_simple_extent_ndims(space_id);
      if (rank <= 0) {
-	  err = 6;
+	  err = INVALID_RANK;
 	  goto done;
      }
      
@@ -236,82 +241,115 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 
      free(maxdims);
      free(dims_copy);
+     
+     for (i = 0; i < nslicedims && slicedim[i] == NO_SLICE_DIM; ++i)
+	  ;
 
-     if (slicedim < 0 || (slicedim >= rank && islice == 0)) {
+     if (i == nslicedims) { /* no slices */
 	  *a = arrayh5_create(rank, dims);
-	  free(dims);
 	  
 	  if (H5Dread(data_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
 		      H5P_DEFAULT, (void *) a->data) < 0) {
-	       err = 3;
+	       err = READ_FAILED;
 	       goto done;
 	  }
      }
-     else if (slicedim < rank) {
-	  if (center_slice)
-	       islice += dims[slicedim] / 2;
-	  if (islice >= 0 && islice < dims[slicedim]) {
-	       hssize_t *start;
-	       hsize_t *count, *count2;
-	       hid_t mem_space_id;
-	       herr_t readerr;
-	       
-	       CHK_MALLOC(start, hssize_t, rank);
-	       CHK_MALLOC(count, hsize_t, rank);
-	       CHK_MALLOC(count2, hsize_t, rank);
-	       
-	       for (i = 0; i < rank; ++i) {
-		    count[i] = dims[i];
-		    count2[i] = dims[i];
-		    start[i] = 0;
+     else if (nslicedims > 0) {
+	  int j, rank2 = rank;
+	  hssize_t *start;
+	  hsize_t *count, *count2;
+	  hid_t mem_space_id;
+	  herr_t readerr;
+
+	  CHK_MALLOC(slicedim, int, nslicedims);
+	  CHK_MALLOC(islice, int, nslicedims);
+
+	  for (i = j = 0; i < nslicedims; ++i)
+	       if (slicedim_[i] != NO_SLICE_DIM) {
+		    if (slicedim_[i] == LAST_SLICE_DIM)
+			 slicedim[j] = rank - 1;
+		    else
+			 slicedim[j] = slicedim_[i];
+		    if (slicedim[j] < 0 || slicedim[j] >= rank) {
+			 err = INVALID_SLICE;
+			 goto done;
+		    }
+		    islice[j] = islice_[i];
+		    if (center_slice[i])
+			 islice[j] += dims[slicedim[j]] / 2;
+		    if (islice[j] < 0 || islice[j] >= dims[slicedim[j]]) {
+			 err = INVALID_SLICE;
+			 goto done;
+		    }
+		    j++;
 	       }
-	       start[slicedim] = islice;
-	       count[slicedim] = 1;
-	       
-	       H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
-				   start, NULL, count, NULL);
-	       
-	       for (i = slicedim; i + 1 < rank; ++i)
-		    count2[i] = dims[i] = dims[i + 1];
-	       start[slicedim] = 0;
-	       rank = rank - 1;
-	       if (rank == 0) {
-		    rank = 1;
-		    count2[0] = dims[0] = 1;
-		    *a = arrayh5_create(0, dims);
+	  nslicedims = j;
+	  
+	  CHK_MALLOC(start, hssize_t, rank);
+	  CHK_MALLOC(count, hsize_t, rank);
+	  CHK_MALLOC(count2, hsize_t, rank);
+	  
+	  for (i = 0; i < rank; ++i) {
+	       count[i] = dims[i];
+	       start[i] = 0;
+	  }
+	  for (i = 0; i < nslicedims; ++i) {
+	       start[slicedim[i]] = islice[i];
+	       count[slicedim[i]] = 1;
+	  }
+	  
+	  H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
+			      start, NULL, count, NULL);
+
+	  for (i = j = 0; i < rank; ++i) {
+	       int k;
+	       for (k = 0; k < nslicedims && i != slicedim[k]; ++k)
+		    ;
+	       if (k == nslicedims) {
+		 count2[j++] = dims[i];
+		 rank2--;
 	       }
-	       else
-		    *a = arrayh5_create(rank, dims);
-	       free(dims);
-	       
-	       mem_space_id = H5Screate_simple(rank, count2, NULL);
-	       H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-				   start, NULL, count2, NULL);
-	       
-	       readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE, 
-				 mem_space_id, space_id, 
-				 H5P_DEFAULT, (void *) a->data);
-	       
-	       H5Sclose(mem_space_id);
-	       free(count2);
-	       free(count);
-	       free(start);
-	       
-	       if (readerr < 0) {
-		    err = 4;
-		    goto done;
-	       }
+	  }
+
+	  for (i = 0; i < rank2; ++i)
+	       dims[i] = count2[i];
+
+	  if (rank2 == 0) { /* HDF5 doesn't like rank 0 */
+	    rank2 = 1;
+	    dims[0] = count2[0] = 1;
+	    *a = arrayh5_create(0, dims);
+	  }
+	  else
+	    *a = arrayh5_create(rank, dims);
+	  
+	  mem_space_id = H5Screate_simple(rank2, count2, NULL);
+	  H5Sselect_all(mem_space_id);
+	  
+	  readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE, 
+			    mem_space_id, space_id, 
+			    H5P_DEFAULT, (void *) a->data);
+	  
+	  H5Sclose(mem_space_id);
+	  free(count2);
+	  free(count);
+	  free(start);
+	  
+	  if (readerr < 0) {
+	       err = SLICE_FAILED;
+	       goto done;
 	  }
      }
      else {
-	  free(dims);
-	  err = 5;
+	  err = INVALID_SLICE;
 	  goto done;
      }
 
  done:
-     if (err >= 3 && err <= 4)
+     if (err != NO_ERROR)
 	  arrayh5_destroy(*a);
+     free(islice);
+     free(slicedim);
+     free(dims);
      if (space_id >= 0)
 	  H5Sclose(space_id);
      if (data_id >= 0)

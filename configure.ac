@@ -1,8 +1,9 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.8beta)
-AM_INIT_AUTOMAKE
+AC_INIT(h5utils, 1.8beta, stevenj@alum.mit.edu)
+AM_INIT_AUTOMAKE(1.6)
 AC_CONFIG_SRCDIR([h5topng.c])
 AM_CONFIG_HEADER(config.h)
+AM_MAINTAINER_MODE
 
 # Checks for programs.
 AC_PROG_CC
@@ -14,6 +15,20 @@ AC_CHECK_LIB(m, sqrt)
 
 MORE_H5UTILS=""
 MORE_H5UTILS_MANS=""
+
+###########################################################################
+
+dnl override CFLAGS selection when debugging
+if test "${enable_debug}" = "yes"; then
+	CFLAGS="-g"
+fi
+
+dnl add gcc warnings, in debug/maintainer mode only
+if test "$enable_debug" = yes || test "$USE_MAINTAINER_MODE" = yes; then
+	if test $ac_cv_prog_gcc = yes; then
+		CFLAGS="$CFLAGS -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -pedantic -Wno-long-long -Wshadow -Wbad-function-cast -Wwrite-strings -Wstrict-prototypes -Wredundant-decls -Wnested-externs" # -Wundef -Wconversion -Wmissing-prototypes -Wmissing-declarations 
+	fi
+fi
 
 ###########################################################################
 

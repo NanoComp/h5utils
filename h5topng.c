@@ -49,7 +49,8 @@ void usage(FILE *f)
 	     "  -o <file> : output to <file> (first input file only)\n"
 	     "    -x <ix> : take x=<ix> slice of data\n"
 	     "    -y <iy> : take y=<iy> slice of data\n"
-	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
+	     "    -z <iz> : take z=<iz> slice of data\n"
+	     "    -t <it> : take t=<it> slice of data's last dimension\n"
 	     "         -0 : use dataset center as origin for -x/-y/-z\n"
 	     "    -X <sx> : scale width by <sx> [ default: 1.0 ]\n"
 	     "    -Y <sy> : scale height by <sy> [ default: 1.0 ]\n"
@@ -125,7 +126,8 @@ int main(int argc, char **argv)
      extern char *optarg;
      extern int optind;
      int c;
-     int slicedim = 2, islice = 0, center_slice = 0;
+     int slicedim[4] = {NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM};
+     int islice[4], center_slice[4] = {0,0,0,0};
      int err;
      int nx, ny;
      char *colormap = NULL, *cmap_fname = NULL;
@@ -158,9 +160,6 @@ int main(int argc, char **argv)
 	      case 'T':
 		   transpose = 1;
 		   break;
-	      case '0':
-		   center_slice = 1;
-		   break;
 	      case 'r':
 		   invert = 1;
 		   break;
@@ -192,17 +191,24 @@ int main(int argc, char **argv)
 		   strcpy(contour_fname, optarg);
 		   break;
 	      case 'x':
-		   islice = atoi(optarg);
-		   slicedim = 0;
+		   islice[0] = atoi(optarg);
+		   slicedim[0] = 0;
 		   break;
 	      case 'y':
-		   islice = atoi(optarg);
-		   slicedim = 1;
+		   islice[1] = atoi(optarg);
+		   slicedim[1] = 1;
 		   break;
 	      case 'z':
-		   islice = atoi(optarg);
-		   slicedim = 2;
+		   islice[2] = atoi(optarg);
+		   slicedim[2] = 2;
 		   break;
+	      case 't':
+		   islice[3] = atoi(optarg);
+		   slicedim[3] = LAST_SLICE_DIM;
+		   break;
+              case '0':
+                   center_slice[0] = center_slice[1] = center_slice[2] = 1;
+                   break;
 	      case 'c':
 		   free(colormap);
 		   colormap = (char*) malloc(sizeof(char) *
@@ -291,7 +297,7 @@ int main(int argc, char **argv)
 	  if (verbose)
 	       printf("reading contour data from \"%s\".\n", fname);
 	  err = arrayh5_read(&contour_data, fname, dname, NULL,
-			     slicedim, islice, center_slice);
+			     4, slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(contour_data.rank >= 1,
 		"data must have at least one dimension");
@@ -317,14 +323,21 @@ int main(int argc, char **argv)
           if (!dname[0])
                dname = data_name;
 
-	  if (verbose)
-	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
-		      h5_fname, islice, slicedim + 'x');
-	  
+          if (verbose) {
+               int i;
+               printf("reading from \"%s\"", h5_fname);
+               for (i = 0; i < 4; ++i)
+                    if (slicedim[i] != NO_SLICE_DIM)
+                         printf(", slice at %d in %c dimension", islice[i],
+                                slicedim[i] == LAST_SLICE_DIM ? 't'
+                                : slicedim[i] + 'x');
+               printf(".\n");
+          }                                                                                
 	  err = arrayh5_read(&a, h5_fname, dname, NULL,
-			     slicedim, islice, center_slice);
+			     4, slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
+	  CHECK(a.rank <= 2, "data can have at most two dimensions (try specifying a slice)");
 	  
 	  CHECK(!contour_fname || arrayh5_conformant(a, contour_data),
 		"contour data must be conformant with source data");
@@ -352,7 +365,8 @@ int main(int argc, char **argv)
 		    max = a_min;
 	       }
 	       if (zero_center) {
-		    max = fabs(max) > fabs(min) ? fabs(max) : fabs(min);
+		    if (!max_set || min_set || max <= 0)
+			 max = fabs(max) > fabs(min) ? fabs(max) : fabs(min);
 		    min = -max;
 	       }
 	  }

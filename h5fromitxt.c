@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 #include <unistd.h>
 
@@ -89,7 +90,6 @@ int main(int argc, char **argv)
      double fill_val = 0;
      int ncols = -1, cur_ncols = 0;
      int read_newline = 0;
-     int err;
      int verbose = 0;
      int transpose = 0;
      int append = 0;
@@ -284,7 +284,6 @@ int main(int argc, char **argv)
      }
 
      if (verbose) {
-	  int i;
 	  printf("Writing size %d", a.dims[0]);
 	  for (i = 1; i < a.rank; ++i)
 	       printf("x%d", a.dims[i]);

@@ -43,7 +43,7 @@ DEFUN_DLD(h5read, args, ,
      octave_value retval;
      arrayh5 a;
      int readerr;
-     int slicedim = 2, islice = 0;
+     int slicedim = 2, islice = 0, center_slice = 0;
      
      if (args.length() < 1 || args.length() > 4 || !args(0).is_string()
 	 || (args.length() >= 2 && !args(1).is_string())
@@ -62,7 +62,7 @@ DEFUN_DLD(h5read, args, ,
      readerr = arrayh5_read(&a, fname.c_str(),
 			    args.length() >= 4 ? 
 			    args(3).string_value().c_str() : NULL, 
-			    NULL, slicedim, islice, 0);
+			    NULL, 1, &slicedim, &islice, &center_slice);
      if (readerr) {
 	  fprintf(stderr, "error in h5read: %s\n",
 		  arrayh5_read_strerror[readerr]);
