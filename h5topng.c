@@ -289,7 +289,8 @@ int main(int argc, char **argv)
 		      png_fname, nx, ny);
 	  
 	  writepng(png_fname, nx, ny, transpose, skew,
-		   scaley, scalex, a.data, contour_data.data, mask_thresh,
+		   scaley, scalex, a.data, 
+		   contour_fname ? contour_data.data : NULL, mask_thresh,
 		   min, max, invert, colormap);
 
 	  arrayh5_destroy(a);
