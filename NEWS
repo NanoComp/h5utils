@@ -1,3 +1,8 @@
+h5utils 1.9.1 (8/5/04)
+
+  * Fix h5topng compilation failure with some non-C99 compilers;
+    thanks to Maarten van Reeuwijk for the bug report.
+
 h5utils 1.9 (7/12/04)
 
   * Added new h5math utility, which creates and combines HDF5 datasets
