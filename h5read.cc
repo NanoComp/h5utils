@@ -39,7 +39,7 @@ DEFUN_DLD(h5read, args, ,
 "within the HDF5 file.  The default is to read the first dataset.\n"
 )
 {
-     string fname, dataname;
+     std::string fname, dataname;
      octave_value retval;
      arrayh5 a;
      int readerr;
