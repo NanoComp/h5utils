@@ -1,4 +1,4 @@
-h5utils 1.5
+h5utils 1.5 (7/9/00)
 
   * Added h5fromh4 program to convert HDF4 datasets to HDF5 format.
 
