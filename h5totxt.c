@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 		   usage(stdout);
 		   return EXIT_SUCCESS;
 	      case 'V':
-		   printf("h5totxt " VERSION " by Steven G. Johnson\n" 
+		   printf("h5totxt " PACKAGE_VERSION " by Steven G. Johnson\n" 
 			  COPYRIGHT);
 		   return EXIT_SUCCESS;
 	      case 'v':

@@ -37,7 +37,7 @@
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5topng error: %s\n", msg); exit(EXIT_FAILURE); } }
 
 #define CMAP_DEFAULT "gray"
-#define CMAP_DIR DATADIR "/h5utils/colormaps/"
+#define CMAP_DIR DATADIR "/" PACKAGE_NAME "/colormaps/"
 
 void usage(FILE *f)
 {
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 		   usage(stdout);
 		   return EXIT_SUCCESS;
 	      case 'V':
-		   printf("h5topng " VERSION " by Steven G. Johnson\n" 
+		   printf("h5topng " PACKAGE_VERSION " by Steven G. Johnson\n" 
 			  COPYRIGHT);
 		   return EXIT_SUCCESS;
 	      case 'v':

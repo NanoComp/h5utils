@@ -1,28 +1,23 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5topng.c)
-AC_CONFIG_HEADER(config.h)
-
-VERSION=1.7
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [h5utils version number string])
-AC_SUBST(VERSION)
+AC_INIT(h5utils, 1.7)
+AM_INIT_AUTOMAKE
+AC_CONFIG_SRCDIR([h5topng.c])
+AM_CONFIG_HEADER(config.h)
 
 # Checks for programs.
 AC_PROG_CC
-AC_PROG_MAKE_SET
-AC_PROG_INSTALL
-AC_PROG_RANLIB
-
-# check how to transform the name of the installed program:
-AC_ARG_PROGRAM
 
 # Checks for header files.
 AC_HEADER_STDC
 
 AC_CHECK_LIB(m, sqrt)
 
+MORE_H5UTILS=""
+MORE_H5UTILS_MANS=""
+
 ###########################################################################
 
-H5TOPNG_TARGET=h5topng
+H5TOPNG=yes
 PNG_LIBS=""
 
 AC_CHECK_LIB(z, inflate, ok=yes, ok=no)
@@ -34,14 +29,19 @@ if test "$ok" = "yes"; then
 		PNG_LIBS="-lpng"
 	else
 		AC_MSG_WARN([can't find libpng: won't be able to compile h5topng])
-		H5TOPNG_TARGET=""
+		H5TOPNG=no
 	fi
 else
 	AC_MSG_WARN([can't find libz: won't be able to compile h5topng])
-	H5TOPNG_TARGET=""
+	H5TOPNG=no
 fi
 
-AC_SUBST(H5TOPNG_TARGET)
+if test $H5TOPNG = yes; then
+	MORE_H5UTILS="h5topng $MORE_H5UTILS"
+	H5TOPNG_MAN=h5topng.1
+fi
+
+AC_SUBST(H5TOPNG_MAN)
 AC_SUBST(PNG_LIBS)
 
 ###########################################################################
@@ -50,80 +50,78 @@ AC_SUBST(PNG_LIBS)
 # thus don't have the superior h4toh5 utility.
 AC_CHECK_PROG(H4TOH5, h4toh5, h4toh5)
 
-AC_ARG_WITH(h5fromh4, [  --without-h5fromh4      don't compile h5fromh4], ok=$withval, ok=maybe)
+AC_ARG_WITH(h5fromh4,
+	[AC_HELP_STRING([--without-h5fromh4], [don't compile h5fromh4])],
+	ok=$withval, ok=maybe)
 if test "x$ok" = xyes; then
 	H4TOH5=""
 elif test "x$ok" = xno; then
 	H4TOH5="h4toh5"
 fi
 
+H5FROMH4=no
 if test "x$H4TOH5" != xh4toh5; then
 	AC_CHECK_LIB(jpeg, jpeg_start_compress,
-		AC_CHECK_LIB(df, DFSDgetdata,
-			H4_LIBS="-ldf -ljpeg"; H5FROMH4_TARGET=h5fromh4,
-			AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4]), -ljpeg),
-		AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4]))
+		[AC_CHECK_LIB(df, DFSDgetdata,
+			[H4_LIBS="-ldf -ljpeg"; H5FROMH4=yes],
+			[AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4])], -ljpeg)],
+		[AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4])])
 
-	if test "x$H5FROMH4_TARGET" = xh5fromh4; then
+	if test $H5FROMH4 = yes; then
 		AC_CHECK_HEADERS(hdf.h hdf/hdf.h)
+		MORE_H5UTILS="h5fromh4 $MORE_H5UTILS"
+		MORE_H5UTILS_MANS="h5fromh4.1 $MORE_H5UTILS_MANS"
 	fi
 fi
 
-AC_SUBST(H5FROMH4_TARGET)
 AC_SUBST(H4_LIBS)
 
 ###########################################################################
 
-AC_CHECK_LIB(hdf5, H5Fopen, LIBS="-lhdf5 $LIBS",
-	     AC_MSG_ERROR([hdf5 libraries are required for compilation]))
+AC_CHECK_LIB(hdf5, H5Fopen, [LIBS="-lhdf5 $LIBS"],
+	     [AC_MSG_ERROR([hdf5 libraries are required for compilation])])
 
 ###########################################################################
 
-AC_ARG_WITH(octave, [  --without-octave        don't compile h5read Octave plugin], ok=$withval, ok=yes)
+AC_ARG_WITH(octave, [AC_HELP_STRING([--without-octave], [don't compile h5read Octave plugin])], ok=$withval, ok=yes)
 
-H5READ_TARGET=""
+H5READ=""
 OCT_INSTALL_DIR=""
-H5READ_INSTALL_TARGET=""
-H5READ_UNINSTALL_TARGET=""
 
 if test "x$ok" = xyes; then
 AC_CHECK_PROGS(MKOCTFILE, mkoctfile, echo)
 if test "$MKOCTFILE" = "echo"; then
 	AC_MSG_WARN([can't find mkoctfile: won't be able to compile h5read.oct])
 else
-	H5READ_TARGET=h5read.oct
-
 	# try to find installation directory
 	AC_CHECK_PROGS(OCTAVE, octave, echo)
 	AC_MSG_CHECKING(where octave plugins go)
 	OCT_INSTALL_DIR=`echo "DEFAULT_LOADPATH" | $OCTAVE -q | tr ':' '\n' | grep "site/oct" | head -1`
 	if test -n "$OCT_INSTALL_DIR"; then
-		H5READ_INSTALL_TARGET="h5read-install"
-		H5READ_UNINSTALL_TARGET="h5read-uninstall"
 		AC_MSG_RESULT($OCT_INSTALL_DIR)
+		H5READ=h5read.oct
 	else
 		AC_MSG_RESULT(unknown)
+		AC_MSG_WARN([can't find where to install octave plugins: won't be able to compile h5read.oct])
 	fi
 fi
 fi
 
-AC_SUBST(H5READ_TARGET)
+AC_SUBST(H5READ)
 AC_SUBST(OCT_INSTALL_DIR)
-AC_SUBST(H5READ_INSTALL_TARGET)
-AC_SUBST(H5READ_UNINSTALL_TARGET)
 
 ###########################################################################
 
-AC_ARG_WITH(v5d, [  --with-v5d=<dir>        use Vis5d in <dir> for h5tov5d], ok=$withval, ok=yes)
-H5TOV5D_TARGET=""
+AC_ARG_WITH(v5d, [AC_HELP_STRING([--with-v5d=<dir>], [use Vis5d in <dir> for h5tov5d])], ok=$withval, ok=yes)
+H5TOV5D=no
 V5D_FILES=""
 V5D_INCLUDES=""
 if test "$ok" = "yes"; then
-	AC_CHECK_LIB(v5d, v5dCreate, V5D_FILES="-lv5d"; H5TOV5D_TARGET=h5tov5d)
+	AC_CHECK_LIB(v5d, v5dCreate, V5D_FILES="-lv5d"; H5TOV5D=yes)
 	AC_CHECK_HEADERS(vis5d/v5d.h)
-	AC_CHECK_HEADER(vis5d+/v5d.h, AC_DEFINE(HAVE_VIS5Dp_V5D_H, 1, [Define if you have the <vis5d+/v5d.h> header file.]))
+	AC_CHECK_HEADER(vis5d+/v5d.h, [AC_DEFINE([HAVE_VIS5Dp_V5D_H], 1, [[Define if you have the <vis5d+/v5d.h> header file.]])])
 elif test "$ok" != "no"; then
-	AC_MSG_CHECKING(for Vis5d object files and headers)
+	AC_MSG_CHECKING([for Vis5d object files and headers])
 	if test -r "$ok/src/v5d.o" -a -r "$ok/src/binio.o" -a -r "$ok/src/v5d.h" -a -r "$ok/src/binio.h"; then
 		V5D_FILES="$ok/src/v5d.o $ok/src/binio.o"
 		V5D_INCLUDES="-I$ok/src"
@@ -132,14 +130,17 @@ elif test "$ok" != "no"; then
 		V5D_INCLUDES="-I$ok"
 	fi
 	if test -z "$V5D_FILES"; then
-		AC_MSG_RESULT(not found)
-		AC_MSG_ERROR(couldn't read Vis5D object files in $ok)
+		AC_MSG_RESULT([not found])
+		AC_MSG_ERROR([couldn't read Vis5D object files in $ok])
 	else
-		AC_MSG_RESULT(found)
+		AC_MSG_RESULT([found])
 	fi
-	H5TOV5D_TARGET=h5tov5d
+	H5TOV5D=yes
 fi
-AC_SUBST(H5TOV5D_TARGET)
+if test $H5TOV5D = yes; then
+	MORE_H5UTILS="h5tov5d $MORE_H5UTILS"
+	MORE_H5UTILS_MANS="h5tov5d.1 $MORE_H5UTILS_MANS"
+fi
 AC_SUBST(V5D_FILES)
 AC_SUBST(V5D_INCLUDES)
 
@@ -184,5 +185,9 @@ AC_DEFINE_UNQUOTED(DATADIR, "$datadir_val", [datadir installation prefix])
 AC_SUBST(datadir_val)
 
 ###########################################################################
+AC_SUBST(MORE_H5UTILS)
+AC_SUBST(MORE_H5UTILS_MANS)
+###########################################################################
 
-AC_OUTPUT(Makefile h5topng.1)
+AC_CONFIG_FILES([Makefile h5topng.1])
+AC_OUTPUT

@@ -290,7 +290,7 @@ int main(int argc, char **argv)
 		   usage(stdout);
 		   return EXIT_SUCCESS;
 	      case 'V':
-		   printf("h5tov5d " VERSION " by Steven G. Johnson\n" 
+		   printf("h5tov5d " PACKAGE_VERSION " by Steven G. Johnson\n" 
        "Copyright (c) 1999, 2000, 2001, 2002 Massachusetts Institute of Technology\n"
        "\n"
        "This program is free software; you can redistribute it and/or modify\n"
