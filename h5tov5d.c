@@ -180,7 +180,7 @@ void output_v5d(char *v5d_fname, char *data_label,
 		    char *name;
 		    int numTimes, nr, nc, fdim;
 
-		    fname = split_fname(h5_fnames[ifile], &data_name);
+		    fname = split_fname(h5_fnames[iv], &data_name);
 		    name =  replace_suffix(fname, ".h5", 
 					   data_name[0] ? data_name - 1 : "");
 		    if (!data_name[0]) data_name = data_label;
