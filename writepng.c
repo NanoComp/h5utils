@@ -32,6 +32,8 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
+#define PIN(min, x, max) MIN(MAX(min, x), max)
+
 static void convert_row(int png_width, int data_width,
 			REAL scaley, REAL offsety,
 			REAL *datarow, REAL *datarow2, REAL weightrow,
@@ -44,7 +46,7 @@ static void convert_row(int png_width, int data_width,
 
      for (i = 0; i < png_width; ++i) {
 	  REAL y = i * scaley + offsety;
-	  int n = MIN((int) (y + 0.5), data_width-1);
+	  int n = PIN(0, (int) (y + 0.5), data_width-1);
 	  double delta = y - n;
 	  REAL val, maskval = 0.0;
 
@@ -62,7 +64,7 @@ static void convert_row(int png_width, int data_width,
 	       }
 	  }
 	  else {
-	       int n2 = MIN(n + (delta < 0.0 ? -1 : 1), data_width);
+	       int n2 = PIN(0, n + (delta < 0.0 ? -1 : 1), data_width-1);
 	       REAL absdelta = fabs(delta);
 	       val = 
 		    (datarow[n * stride] * (1.0 - absdelta) +
@@ -288,10 +290,10 @@ void writepng(char *filename,
 	  }
 	  for (row = 0; row < height; ++row) {
 	       REAL x = row * scalex;
-	       int n = MIN((int) (x + 0.5), data_height-1);
+	       int n = PIN(0,(int) (x + 0.5), data_height-1);
 	       double delta = x - n;
-	       int n2 = MIN(n + (delta>0.0 ? 1 : -1), data_height-1);
-	       int n3 = MIN(n + 1, data_height-1);
+	       int n2 = PIN(0,n + (delta>0.0 ? 1 : -1), data_height-1);
+	       int n3 = PIN(0,n + 1, data_height-1);
 	       REAL offset;
 
 	       if (skewsin < 0.0)
