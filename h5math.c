@@ -83,7 +83,7 @@ int main(int argc, char **argv)
      void *evaluator;
      double res = 1.0;
      int nx, ny, nz, nt, nr, ix, iy, iz, it, ir;
-     double cx, cy, cz, ct;
+     double cx, cy, cz;
 
      while ((c = getopt(argc, argv, "hVvan:f:e:x:y:z:t:0d:r:")) != -1)
 	  switch (c) {
@@ -226,7 +226,6 @@ int main(int argc, char **argv)
      cx = center_slice[0] ? (nx - 1) * 0.5 : 0.0;
      cy = center_slice[1] ? (ny - 1) * 0.5 : 0.0;
      cz = center_slice[2] ? (nz - 1) * 0.5 : 0.0;
-     ct = center_slice[3] ? (nt - 1) * 0.5 : 0.0;
 
      vars = (char **) malloc(sizeof(char *) * (n + 4));
      CHECK(vars, "out of memory");
@@ -292,7 +291,8 @@ int main(int argc, char **argv)
 	  vals[n+0] = (ix - cx) / res;
 	  vals[n+1] = (iy - cy) / res;
 	  vals[n+2] = (iz - cz) / res;
-	  vals[n+3] = it - cy;
+	  vals[n+3] = ao.rank >= 4 ? it : 
+	       (ao.rank >= 3 ? iz : (ao.rank >= 2 ? iy : ix));
 	  ao.data[idx] = evaluator_evaluate(evaluator, n+4, vars, vals);
      }
 
