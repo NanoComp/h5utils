@@ -36,7 +36,7 @@ install: $(H5TOPNG_TARGET)
 	$(INSTALL) -d $(prefix)/bin
 	$(INSTALL) -d $(prefix)/man/man1
 	$(INSTALL) -m 0755 -s h5topng $(prefix)/bin/`echo h5topng|sed '$(transform)'`
-	$(INSTALL) -m 0644 -s h5topng.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5topng.1 $(prefix)/man/man1
 
 uninstall:
 	rm -f $(prefix)/bin/h5topng
