@@ -11,7 +11,8 @@ AC_PROG_CC
 # Checks for header files.
 AC_HEADER_STDC
 
-AC_CHECK_LIB(m, sqrt)
+AC_CHECK_LIB(m, sin)
+AC_CHECK_FUNCS(snprintf)
 
 MORE_H5UTILS=""
 MORE_H5UTILS_MANS=""
@@ -58,6 +59,17 @@ fi
 
 AC_SUBST(H5TOPNG_MAN)
 AC_SUBST(PNG_LIBS)
+
+###########################################################################
+
+AC_CHECK_LIB(matheval, evaluator_evaluate, H5MATH=yes, H5MATH=no)
+
+if test $H5MATH = yes; then
+	MORE_H5UTILS="h5math $MORE_H5UTILS"
+	MORE_H5UTILS_MANS="h5math.1 $MORE_H5UTILS_MANS"
+else
+	AC_MSG_WARN([can't find libmatheval: won't be able to compile h5math])
+fi
 
 ###########################################################################
 
