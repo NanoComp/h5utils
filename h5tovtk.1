@@ -29,11 +29,11 @@ h5tovtk \- convert datasets in HDF5 files to VTK format
 .PP
 ." Add any additional description here
 h5tovtk is a program to generate VTK data files from multidimensional
-datasets in HDF5 files.  VTK, the Visualization ToolKit, is an open
-source, freely available software system for 3D computer graphics,
-image processing, and visualization.  VTK itself is a programming
-library, but it is also the basis for a number of end-user graphical
-visualization programs.
+datasets in HDF5 files.  VTK, the Visualization ToolKit, is an
+open-source, freely available software system for 3D computer
+graphics, image processing, and visualization.  VTK itself is a
+programming library, but it is also the basis for a number of end-user
+graphical visualization programs.
 
 HDF5 is a free, portable binary format and supporting library developed
 by the National Center for Supercomputing Applications at the University
@@ -46,7 +46,10 @@ takes the first dataset, but this can be changed via the
 option, or by using the syntax \fIHDF5FILE:DATASET\fR.
 
 1d/2d/3d datasets are converted into 3d VTK \"structured points\"
-datasets.
+datasets.  Normally, a single scalar VTK dataset is output, but
+vectors and fields can be output via the
+.B -o
+option below.
 
 A typical invocation is of the form
 \'h5tovtk foo.h5\', which will output a VTK data file foo.vtk
@@ -63,9 +66,10 @@ Print the version number and copyright info for h5tovtk.
 Verbose output.
 .TP
 \fB\-o\fR \fIfile\fR
-Save the datasets from all of the input files to a single VTK
-.I file
-with each dataset being expressed as a separate VTK scalar variable.
+Save all the input datasets to a single VTK \fIfile\fR.  If there is
+only one dataset, it is output to a VTK scalar dataset; if there are
+three datasets, they are output as a VTK vector dataset; all other
+numbers of datasets are combined into a VTK field dataset.
 
 Otherwise, the default behavior is to save each dataset to a separate
 VTK file, with the .h5 suffix of the input filename replaced by .vtk
@@ -73,19 +77,67 @@ in the output filename.
 .TP
 \fB\-1\fR, \fB\-2\fR, \fB\-4\fR
 Use 1 , 2, or 4 bytes to store each data point in the
-output file.  Fewer bytes will cause VTK to be faster (as well as
-requiring less storage and memory), but will decrease the resolution
-in the values.
+output file.  Fewer bytes require less storage and memory,
+but will decrease the resolution in the values.
 .B -1
 will break up the data values into one of 256 possible values (on a
 linear scale from the minimum to the maximum value in your data),
 .B -2
 will allow 65536 possible values, and
 .B -4
-will use 4-byte floating-point numbers for an "exact" representation.
-In most circumstances,
+(the default) will use 4-byte floating-point numbers for an "exact"
+representation.
+.TP
+.B -a
+Output in ASCII format; otherwise, VTK's more compact, but less
+readable and somewhat less portable binary format is used.
+.TP
+.B -n
+For binary output (see
+.B -a
+above), by default the data is written in bigendian byte order, which
+is normally the order that VTK expects.  However, some external tools
+and a few VTK classes use the native byte ordering instead (which may
+not be bigendian), and the
+.B -n
+option causes
+.I h5tovtk
+to output binary data in the native ordering.
+.TP
+\fB\-m\fR \fImin\fR, \fB\-M\fR \fImax\fR
+When
 .B -1
-is more than adequate for data visualization purposes.
+or
+.B -2
+are used, the input data are converted to a linear integer scale.
+Normally, the bottom and top of this scale correspond to the
+minimum and maximum values in the data.  Using the
+.B -m
+and
+.B -M
+options, you
+can make the bottom and top of the scale correspond to
+.I min
+and
+.I max
+instead, respectively.  Data values below or above this range will be
+treated as if they were
+.I min
+or
+.I max
+respectively.  See also the
+.B -Z
+option.
+.TP
+.B -Z
+For
+.B -1
+or
+.B -2
+output, center the linear integer scale on the value zero in the data.
+.TP
+.B -r
+Invert the output values (map the minimum to the maximum and vice versa).
 .TP
 \fB\-d\fR \fIname\fR
 Use dataset
@@ -99,5 +151,5 @@ command (included with hdf5) to find the names of datasets within a file.
 .SH BUGS
 Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
 .SH AUTHORS
-Written by Steven G. Johnson.  Copyright (c) 1999, 2000, 2001 by the Massachusetts
+Written by Steven G. Johnson.  Copyright (c) 2002 by the Massachusetts
 Institute of Technology.
