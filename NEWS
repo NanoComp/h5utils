@@ -15,6 +15,9 @@ h5utils 1.7 (not yet released)
 
   * Support -T (transpose dimensions) option in h5tov5d.
 
+  * Fixed bug in h5topng that caused extra rows/columns of garbage pixels
+    to be written at the edges of images when scaling was used.
+
   * When compiling the h5read Octave plugin, respect the CPPFLAGS and LDFLAGS 
     environment variables.  Thanks to Max Colice for the bug report.
 

@@ -44,7 +44,7 @@ static void convert_row(int png_width, int data_width,
 
      for (i = 0; i < png_width; ++i) {
 	  REAL y = i * scaley + offsety;
-	  int n = ((int) (y + 0.5)) % data_width;
+	  int n = MIN((int) (y + 0.5), data_width-1);
 	  double delta = y - n;
 	  REAL val, maskval = 0.0;
 
@@ -62,8 +62,7 @@ static void convert_row(int png_width, int data_width,
 	       }
 	  }
 	  else {
-	       int n2 = (data_width + n +
-			 (delta < 0.0 ? -1 : 1)) % data_width;
+	       int n2 = MIN(n + (delta < 0.0 ? -1 : 1), data_width);
 	       REAL absdelta = fabs(delta);
 	       val = 
 		    (datarow[n * stride] * (1.0 - absdelta) +
@@ -185,13 +184,13 @@ void writepng(char *filename,
      if (transpose) {
 	  height = MAX(1, ny * scalex * skewcos);
 	  width = MAX(1, nx * scaley * (1.0 + fabs(skewsin)));
-	  scalex = (1.0 * ny) / height;
-	  scaley = ((1.0 + fabs(skewsin)) * nx) / width;
+	  scalex = height==1 ? 0 : (1.0 * (ny-1)) / (height-1);
+	  scaley = width==1 ? 0 : ((1.0 + fabs(skewsin)) * (nx-1)) / (width-1);
      } else {
 	  height = MAX(1, nx * scalex * skewcos);
 	  width = MAX(1, ny * scaley * (1.0 + fabs(skewsin)));
-	  scalex = (1.0 * nx) / height;
-	  scaley = ((1.0 + fabs(skewsin)) * ny) / width;
+	  scalex = height==1 ? 0 : (1.0 * (nx-1)) / (height-1);
+	  scaley = width==1 ? 0 : ((1.0 + fabs(skewsin)) * (ny-1)) / (width-1);
      }
 
      fp = fopen(filename, "wb");
@@ -289,10 +288,10 @@ void writepng(char *filename,
 	  }
 	  for (row = 0; row < height; ++row) {
 	       REAL x = row * scalex;
-	       int n = ((int) (x + 0.5)) % data_height;
+	       int n = MIN((int) (x + 0.5), data_height-1);
 	       double delta = x - n;
-	       int n2 = (n + data_height + (delta>0.0 ? 1 : -1)) % data_height;
-	       int n3 = (n + 1) % data_height;
+	       int n2 = MIN(n + (delta>0.0 ? 1 : -1), data_height-1);
+	       int n3 = MIN(n + 1, data_height-1);
 	       REAL offset;
 
 	       if (skewsin < 0.0)
