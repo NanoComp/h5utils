@@ -1,3 +1,8 @@
+h5utils 1.7.1 (3/16/02)
+
+  * Fixed array overrun in h5topng that caused a floating-point exception
+    on Alphas; thanks to Marin Soljacic for the bug report.
+
 h5utils 1.7 (3/9/02)
 
   * h5topng now supports multiple, user-definable color tables, a number
