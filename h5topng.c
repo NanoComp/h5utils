@@ -410,7 +410,9 @@ int main(int argc, char **argv)
      for (islice[3] = islice_min[3]; islice[3] <= islice_max[3];
 	  islice[3] += islice_step[3]) {
 
+     int onx = 1, ony = 1;
      int cnx = 1, cny = 1;
+
      if (contour_fname && !collect_range) {
 	  int rank;
 	  char *fname, *dname;
@@ -446,7 +448,6 @@ int main(int argc, char **argv)
 	  free(fname);
      }
 
-     int onx = 1, ony = 1;
      if (overlay_fname && !collect_range) {
 	  int rank;
 	  char *fname, *dname;
