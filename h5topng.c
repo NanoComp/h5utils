@@ -379,7 +379,7 @@ int main(int argc, char **argv)
 		    printf("writing \"%s\" from %dx%d input data.\n",
 			   png_fname, nx, ny);
 	       
-	       writepng(png_fname, nx, ny, transpose, skew,
+	       writepng(png_fname, nx, ny, !transpose, skew,
 			scaley, scalex, a.data, 
 			contour_fname ? contour_data.data : NULL, mask_thresh,
 			min, max, invert, cmap);
