@@ -1,0 +1,95 @@
+.\" Copyright (c) 1999, 2000 Massachusetts Institute of Technology
+.\" 
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\" 
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\"
+.TH H5FROMH4 1 "December 6, 1999" "h5utils" "h5utils"
+.SH NAME
+h5fromh4 \- convert HDF4 scientific datasets to an HDF5 file
+.SH SYNOPSIS
+.B h5fromh4
+[\fIOPTION\fR]... [\fIHDF4FILE\fR]...
+.SH DESCRIPTION
+.PP
+." Add any additional description here
+h5fromh4 takes one or more files in HDF4 format and outputs files in
+HDF5 format containing the datasets from the HDF4 files.  (Currently,
+only a single dataset per HDF4 file is converted.)
+
+HDF4 and HDF5 are free, portable binary formats and supporting libraries
+developed by the National Center for Supercomputing Applications at
+the University of Illinois in Urbana-Champaign.  A single
+.I h5
+file can contain multiple data sets; by default,
+.I h5fromh4
+creates a dataset called "data", but this can be changed via the
+.B -d
+option, or by using the syntax \fIHDF5FILE:DATASET\fR with the
+.B -o
+option.  The
+.B -a
+option can be used to append new datasets to an existing HDF5 file.
+If the
+.B -o
+option is used and multiple HDF4 files are specified, all the HDF4
+datasets are output into that HDF5 file with the input filenames
+(minus the ".hdf" suffix) used as the dataset names.
+
+The most basic usage is something like \'h5fromh4 foo.hdf\', which
+will output a file foo.h5 containing the scientific dataset from
+foo.hdf.
+.SH OPTIONS
+.TP
+.B -h
+Display help on the command-line options and usage.
+.TP
+.B -V
+Print the version number and copyright info for h5fromh4.
+.TP
+.B -v
+Verbose output.
+.TP
+.B -a
+If the HDF5 output file already exists, append the data as a new
+dataset rather than overwriting the file (the default behavior).  An
+existing dataset of the same name within the file is overwritten,
+however.
+.TP
+\fB\-o\fR \fIfile\fR
+Send HDF5 output to
+.I file
+rather than to the input filename with .hdf replaced with .h5 the
+default.  If multiple input files were specified, this causes all
+input datasets to be stored in
+.I file
+(rather than in separate files), with the input filenames (minus the
+.hdf suffix) as the dataset names.
+.TP
+\fB\-d\fR \fIname\fR
+Write to dataset
+.I name
+in the output; otherwise, the output dataset is called "data" by default.
+Alternatively, use the syntax \fIHDF5FILE:DATASET\fR with the
+.B -o
+option.
+.SH BUGS
+Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
+.SH AUTHORS
+Written by Steven G. Johnson.  Copyright (c) 1999, 2000 by the Massachusetts
+Institute of Technology.
