@@ -1,4 +1,19 @@
+h5utils 1.7 (not yet released)
+
+  * h5topng now supports multiple, user-definable color tables, a number
+    of which are provided.  INCOMPATIBLE CHANGE: the -c option now has
+    the syntax: -c <colortable>.  The old behavior corresponds to the
+    included "bluered" colortable, invoked via: -c bluered.
+
+  * Added h5tovtk program to output VTK (Visualization ToolKit) data files.
+
   * Support -T (transpose dimensions) option in h5tov5d.
+
+  * When compiling the h5read Octave plugin, respect the CPPFLAGS and LDFLAGS 
+    environment variables.  Thanks to Max Colice for the bug report.
+
+  * Fixed problem when --without-h5tov5d and --without-h5fromh4 are used. 
+    Thanks to Nikola Ivanov Nikolov for the fix.
 
 h5utils 1.6 (1/17/01)
 
