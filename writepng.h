@@ -43,18 +43,15 @@ typedef enum {
 void writepng(char *filename,
 	      int nx, int ny, int transpose,
 	      REAL skew, REAL scalex, REAL scaley,
-	      REAL *data, int *mask,
+	      REAL *data, REAL *mask, REAL mask_thresh,
 	      REAL minrange, REAL maxrange,
 	      int invert, colormap_t colormap);
 
 void writepng_autorange(char *filename,
 			int nx, int ny, int transpose,
 			REAL skew, REAL scalex, REAL scaley,
-			REAL *data, int *mask,
+			REAL *data, REAL *mask, REAL mask_thresh,
 			int invert, colormap_t colormap);
-
-void compute_outlinemask(int nx, int ny, REAL * data, int *mask,
-			 REAL background_value);
 
 /***********************************************************************/
 

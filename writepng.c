@@ -35,7 +35,8 @@
 static void convert_row(int png_width, int data_width,
 			REAL scaley, REAL offsety,
 			REAL *datarow, REAL *datarow2, REAL weightrow,
-			int stride, int *maskrow, int *maskrow2,
+			int stride, REAL *maskrow, REAL *maskrow2,
+			REAL mask_thresh, REAL *mask_prev,
 			REAL minrange, REAL maxrange, REAL scale, int invert,
 			png_byte * row_pointer)
 {
@@ -45,7 +46,7 @@ static void convert_row(int png_width, int data_width,
 	  REAL y = i * scaley + offsety;
 	  int n = (int) (y + 0.5);
 	  double delta = y - n;
-	  REAL val, maskweight = 0.0;
+	  REAL val, maskval = 0.0;
 
 	  if (n < 0 || n > data_width) {
 	       row_pointer[i] = 255;
@@ -55,10 +56,10 @@ static void convert_row(int png_width, int data_width,
 	  if (delta == 0.0) {
 	       val = (datarow[n * stride] * weightrow +
 		      datarow2[n * stride] * (1.0 - weightrow));
-	       if (maskrow != NULL)
-		    maskweight =
-			 (maskrow[n * stride] * weightrow +
-			  maskrow2[n * stride] * (1.0 - weightrow));
+	       if (maskrow != NULL) {
+		    maskval = (maskrow[n * stride] * weightrow +
+			       maskrow2[n * stride] * (1.0 - weightrow));
+	       }
 	  }
 	  else {
 	       int n2 = (data_width + n +
@@ -70,28 +71,38 @@ static void convert_row(int png_width, int data_width,
 		    (datarow2[n * stride] * (1.0 - absdelta) +
 		     datarow2[n2 * stride] * absdelta) * 
 		    (1.0 - weightrow);
-	       if (maskrow != NULL)
-		    maskweight =
+	       if (maskrow != NULL) {
+		    maskval = 
 			 (maskrow[n * stride] * (1.0 - absdelta) +
 			  maskrow[n2 * stride] * absdelta) * weightrow +
 			 (maskrow2[n * stride] * (1.0 - absdelta) +
 			  maskrow2[n2 * stride] * absdelta) * 
 			 (1.0 - weightrow);
+	       }
 	  }
+
+	  if (maskrow != NULL) {
+	       REAL maskmin, maskmax;
+	       maskmin = MIN(MIN(maskval, i ? mask_prev[i-1] : maskval), 
+				 mask_prev[i]);
+	       maskmax = MAX(MAX(maskval, i ? mask_prev[i-1] : maskval), 
+				 mask_prev[i]);
+	       mask_prev[i] = maskval;
+	       if (maskmin <= mask_thresh && maskmax >= mask_thresh) {
+		    row_pointer[i] = 255;
+		    continue;
+	       }
+	  }	 
 	  
 	  if (val > maxrange)
 	       val = maxrange;
 	  else if (val < minrange)
 	       val = minrange;
 	  
-	  if (maskweight > 0.5)
-	       row_pointer[i] = 255;
-	  else {
-	       if (invert)
-		    row_pointer[i] = 254 - (val - minrange) * scale;
-	       else
-		    row_pointer[i] = (val - minrange) * scale;
-	  }
+	  if (invert)
+	       row_pointer[i] = 254 - (val - minrange) * scale;
+	  else
+	       row_pointer[i] = (val - minrange) * scale;
      }
 }
 
@@ -131,7 +142,7 @@ void writepng(char *filename,
 	      int nx, int ny, int transpose, 
 	      REAL skew, REAL scalex, REAL scaley,
 	      REAL * data,
-	      int *mask,
+	      REAL *mask, REAL mask_thresh,
 	      REAL minrange, REAL maxrange,
 	      int invert,
 	      colormap_t colormap)
@@ -224,7 +235,7 @@ void writepng(char *filename,
 
      /* Write out data, one row at a time: */
      {
-	  REAL scale;
+	  REAL scale, *mask_prev = NULL;
 	  png_byte *row_pointer;
 	  int row;
 	  int data_height = transpose ? ny : nx;
@@ -240,11 +251,20 @@ void writepng(char *filename,
 	       fclose(fp);
 	       return;
 	  }
+	  if (mask) {
+	       mask_prev = (REAL *) malloc(width * sizeof(REAL));
+	       if (mask_prev == NULL) {
+		    free(row_pointer);
+		    fclose(fp);
+		    return;
+	       }
+	  }
 	  for (row = 0; row < height; ++row) {
 	       REAL x = row * scalex;
 	       int n = ((int) (x + 0.5)) % data_height;
 	       double delta = x - n;
 	       int n2 = (n + data_height + (delta>0.0 ? 1 : -1)) % data_height;
+	       int n3 = (n + 1) % data_height;
 	       REAL offset;
 
 	       if (skewsin < 0.0)
@@ -256,7 +276,8 @@ void writepng(char *filename,
 				data + n, data + n2, 1.0 - fabs(delta),
 				data_height, 
 				mask ? mask + n : NULL,
-				mask ? mask + n2 : NULL,
+				mask ? mask + n3 : NULL,
+				mask_thresh, mask_prev,
 				minrange, maxrange, scale, invert,
 				row_pointer);
 	       else
@@ -265,13 +286,15 @@ void writepng(char *filename,
 				1.0 - fabs(delta),
 				1, 
 				mask ? mask + n * data_width : NULL,
-				mask ? mask + n2 * data_width : NULL,
+				mask ? mask + n3 * data_width : NULL,
+				mask_thresh, mask_prev,
 				minrange, maxrange, scale, invert,
 				row_pointer);
 	       png_write_rows(png_ptr, &row_pointer, 1);
 	  }
 
 	  free(row_pointer);
+	  free(mask_prev);
      }
 
      /* It is REQUIRED to call this to finish writing the rest of the file */
@@ -307,7 +330,7 @@ void writepng_autorange(char *filename,
 			int nx, int ny, int transpose, 
 			REAL skew, REAL scalex,REAL scaley,
 			REAL * data,
-			int *mask,
+			REAL *mask, REAL mask_thresh,
 			int invert,
 			colormap_t colormap)
 {
@@ -335,24 +358,5 @@ void writepng_autorange(char *filename,
 	       range = newrange;
      }
      writepng(filename, nx, ny, transpose, skew, scalex, scaley,
-	      data, mask, -range, range, invert, colormap);
-}
-
-#define INDX(x,y) (ny*(x) + (y))
-#define BKGD(x,y) (data[INDX(x,y)] == background_value)
-
-void compute_outlinemask(int nx, int ny, REAL * data, int *mask,
-			 REAL background_value)
-{
-     int x, y;
-     
-     for (x = 0; x < nx; ++x)
-	  for (y = 0; y < ny; ++y) {
-	       if (!BKGD(x, y) && 
-		   (BKGD(MAX(x - 1, 0), y) || BKGD(MIN(x + 1, nx - 1), y)
-		    || BKGD(x, MAX(y - 1, 0)) || BKGD(x, MIN(y + 1, ny - 1))))
-		    mask[INDX(x, y)] = 1;
-	       else
-		    mask[INDX(x, y)] = 0;
-	  }
+	      data, mask, mask_thresh, -range, range, invert, colormap);
 }

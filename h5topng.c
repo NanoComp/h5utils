@@ -93,8 +93,8 @@ int main(int argc, char **argv)
 {
      arrayh5 a, contour_data;
      char *png_fname = NULL, *contour_fname = NULL, *data_name = NULL;
-     int *mask = NULL;
-     double background_value = 1.0;
+     REAL mask_thresh = 0;
+     int mask_thresh_set = 0;
      double min = 0, max = 0;
      int min_set = 0, max_set = 0;
      extern char *optarg;
@@ -178,7 +178,8 @@ int main(int argc, char **argv)
 		   max_set = 1;
 		   break;
 	      case 'b':
-		   background_value = atof(optarg);
+		   mask_thresh = atof(optarg);
+		   mask_thresh_set = 1;
 		   break;
 	      case 'X':
 		   scalex = atof(optarg);
@@ -218,10 +219,11 @@ int main(int argc, char **argv)
 	  cnx = contour_data.dims[0];
 	  cny = contour_data.rank >= 2 ? contour_data.dims[1] : 1;
 	  
-	  mask = (int *) malloc(sizeof(int) * cnx * cny);
-	  CHECK(mask, "out of memory");
-	  compute_outlinemask(cnx,cny, contour_data.data,
-			      mask, background_value);
+	  if (!mask_thresh_set) {
+               double c_min, c_max;
+               arrayh5_getrange(contour_data, &c_min, &c_max);
+	       mask_thresh = (c_min + c_max) * 0.5;
+	  }
 
 	  free(fname);
      }
@@ -287,7 +289,8 @@ int main(int argc, char **argv)
 		      png_fname, nx, ny);
 	  
 	  writepng(png_fname, nx, ny, transpose, skew,
-		   scaley, scalex, a.data, mask, min, max, invert, colormap);
+		   scaley, scalex, a.data, contour_data.data, mask_thresh,
+		   min, max, invert, colormap);
 
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
@@ -295,7 +298,6 @@ int main(int argc, char **argv)
      }
      if (contour_fname)
 	  arrayh5_destroy(contour_data);
-     free(mask);
      free(contour_fname);
      free(data_name);
 
