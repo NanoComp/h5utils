@@ -51,6 +51,8 @@ extern int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 extern void arrayh5_write(arrayh5 a, char *filename, char *dataname,
 			  short append_data);
 
+int arrayh5_read_rank(const char *fname, const char *datapath, int *rank);
+
 #define NO_SLICE_DIM -1
 #define LAST_SLICE_DIM -2
 

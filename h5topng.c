@@ -49,7 +49,7 @@ void usage(FILE *f)
              "         -V : print version number and copyright\n"
 	     "         -v : verbose output\n"
 	     "  -o <file> : output to <file> (first input file only)\n"
-	     "    -x <ix> : take x=<ix> slice of data\n"
+	     "    -x <ix> : take x=<ix> slice of data (or <min>:<inc>:<max>)\n"
 	     "    -y <iy> : take y=<iy> slice of data\n"
 	     "    -z <iz> : take z=<iz> slice of data\n"
 	     "    -t <it> : take t=<it> slice of data's last dimension\n"
@@ -198,6 +198,32 @@ colormap_t get_cmap(const char *colormap, int invert, double scale_alpha,
      return cmap;
 }
 
+static int get_islice(const char *s, int *min, int *max, int *step)
+{
+     int num_read = sscanf(s, "%d:%d:%d", min, step, max);
+     if (num_read == 1) {
+	  *max = *min;
+	  *step = 1;
+     }
+     else if (num_read == 2) {
+	  *max = *step;
+	  *step = 1;
+     }
+     CHECK(num_read, "invalid slice argument");
+     return num_read;
+}
+
+static int iabs(int x) { return x < 0 ? -x : x; }
+static int imax(int x, int y) { return x > y ? x : y; }
+static int ilog10(int x) {
+     int lg = 0, prod = 1;
+     while (prod < x) {
+	  ++lg;
+	  prod *= 10;
+     }
+     return lg - 1;
+}
+
 int main(int argc, char **argv)
 {
      arrayh5 a, contour_data, overlay_data;
@@ -212,6 +238,7 @@ int main(int argc, char **argv)
      int c;
      int slicedim[4] = {NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM,NO_SLICE_DIM};
      int islice[4], center_slice[4] = {0,0,0,0};
+     int islice_min[4] = {0,0,0,0}, islice_max[4] = {0,0,0,0}, islice_step[4] = {1,1,1,1};
      int err;
      int nx, ny;
      char *colormap = NULL, *overlay_colormap = NULL;
@@ -226,12 +253,13 @@ int main(int argc, char **argv)
      int invert = 0;
      double skew = 0.0;
      int eight_bit = 0;
-     int ifile;
+     int ifile, num_processed;
+     int data_rank, slicedim3;
 
      colormap = my_strdup(CMAP_DEFAULT);
      overlay_colormap = my_strdup(OVERLAY_CMAP_DEFAULT);
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:0c:m:M:RC:b:d:vX:Y:S:TrZs:Va:A:8")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:t:0c:m:M:RC:b:d:vX:Y:S:TrZs:Va:A:8")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -275,19 +303,23 @@ int main(int argc, char **argv)
 		   overlay_fname = my_strdup(optarg);
 		   break;
 	      case 'x':
-		   islice[0] = atoi(optarg);
+		   get_islice(optarg, &islice_min[0], &islice_max[0],
+			      &islice_step[0]);
 		   slicedim[0] = 0;
 		   break;
 	      case 'y':
-		   islice[1] = atoi(optarg);
+		   get_islice(optarg, &islice_min[1], &islice_max[1],
+			      &islice_step[1]);
 		   slicedim[1] = 1;
 		   break;
 	      case 'z':
-		   islice[2] = atoi(optarg);
+		   get_islice(optarg, &islice_min[2], &islice_max[2],
+			      &islice_step[2]);
 		   slicedim[2] = 2;
 		   break;
 	      case 't':
-		   islice[3] = atoi(optarg);
+		   get_islice(optarg, &islice_min[3], &islice_max[3],
+			      &islice_step[3]);
 		   slicedim[3] = LAST_SLICE_DIM;
 		   break;
               case '0':
@@ -349,9 +381,38 @@ int main(int argc, char **argv)
 	  usage(stderr);
 	  return EXIT_FAILURE;
      }
+     
+     contour_data.data = overlay_data.data = NULL;
 
-     if (contour_fname) {
-	  int cnx, cny;
+     slicedim3 = slicedim[3];
+     {
+          char *dname, *h5_fname;
+          h5_fname = split_fname(argv[optind], &dname);
+          if (!dname[0])
+               dname = data_name;
+	  err = arrayh5_read_rank(h5_fname, dname, &data_rank);
+	  CHECK(!err, arrayh5_read_strerror[err]);
+	  free(h5_fname);
+	  if (verbose)
+	       printf("data rank = %d\n", data_rank);
+     }
+
+ process_files:     
+
+     num_processed = 0;
+
+     for (islice[0] = islice_min[0]; islice[0] <= islice_max[0];
+	  islice[0] += islice_step[0])
+     for (islice[1] = islice_min[1]; islice[1] <= islice_max[1];
+	  islice[1] += islice_step[1])
+     for (islice[2] = islice_min[2]; islice[2] <= islice_max[2];
+	  islice[2] += islice_step[2])
+     for (islice[3] = islice_min[3]; islice[3] <= islice_max[3];
+	  islice[3] += islice_step[3]) {
+
+     int cnx = 1, cny = 1;
+     if (contour_fname && !collect_range) {
+	  int rank;
 	  char *fname, *dname;
 
 	  fname = split_fname(contour_fname, &dname);
@@ -360,11 +421,18 @@ int main(int argc, char **argv)
 
 	  if (verbose)
 	       printf("reading contour data from \"%s\".\n", fname);
+
+	  err = arrayh5_read_rank(fname, dname, &rank);
+          CHECK(!err, arrayh5_read_strerror[err]);
+	  if (slicedim3 == LAST_SLICE_DIM && data_rank > rank)
+	       slicedim[3] = NO_SLICE_DIM;
+
 	  err = arrayh5_read(&contour_data, fname, dname, NULL,
 			     4, slicedim, islice, center_slice);
+	  slicedim[3] = slicedim3;
 	  CHECK(!err, arrayh5_read_strerror[err]);
-	  CHECK(contour_data.rank >= 1,
-		"data must have at least one dimension");
+	  CHECK(contour_data.rank == 1 || contour_data.rank == 2,
+	       "contour slice must be one or two dimensional");
 	  
 	  cnx = contour_data.dims[0];
 	  cny = contour_data.rank >= 2 ? contour_data.dims[1] : 1;
@@ -378,8 +446,9 @@ int main(int argc, char **argv)
 	  free(fname);
      }
 
-     if (overlay_fname) {
-	  int cnx, cny;
+     int onx = 1, ony = 1;
+     if (overlay_fname && !collect_range) {
+	  int rank;
 	  char *fname, *dname;
 
 	  fname = split_fname(overlay_fname, &dname);
@@ -388,19 +457,25 @@ int main(int argc, char **argv)
 
 	  if (verbose)
 	       printf("reading overlay data from \"%s\".\n", fname);
+
+	  err = arrayh5_read_rank(fname, dname, &rank);
+          CHECK(!err, arrayh5_read_strerror[err]);
+	  if (slicedim3 == LAST_SLICE_DIM && data_rank > rank)
+	       slicedim[3] = NO_SLICE_DIM;
+
 	  err = arrayh5_read(&overlay_data, fname, dname, NULL,
 			     4, slicedim, islice, center_slice);
+	  slicedim[3] = slicedim3;
 	  CHECK(!err, arrayh5_read_strerror[err]);
-	  CHECK(overlay_data.rank >= 1,
-		"data must have at least one dimension");
+	  CHECK(overlay_data.rank == 1 || overlay_data.rank == 2,
+	       "overlay slice must be one or two dimensional");
 	  
-	  cnx = overlay_data.dims[0];
-	  cny = overlay_data.rank >= 2 ? overlay_data.dims[1] : 1;
+	  onx = overlay_data.dims[0];
+	  ony = overlay_data.rank >= 2 ? overlay_data.dims[1] : 1;
 
 	  free(fname);
      }
 
- process_files:     
      if (verbose)
 	  printf("------\n");
      for (ifile = optind; ifile < argc; ++ifile) {
@@ -418,21 +493,29 @@ int main(int argc, char **argv)
                                 slicedim[i] == LAST_SLICE_DIM ? 't'
                                 : slicedim[i] + 'x');
                printf(".\n");
-          }                                                                                
+          }
+
 	  err = arrayh5_read(&a, h5_fname, dname, NULL,
 			     4, slicedim, islice, center_slice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  CHECK(a.rank <= 2, "data can have at most two dimensions (try specifying a slice)");
 	  
-	  CHECK(!contour_fname || arrayh5_conformant(a, contour_data),
-		"contour data must be conformant with source data");
-	  
-	  CHECK(!overlay_fname || arrayh5_conformant(a, overlay_data),
-		"overlay data must be conformant with source data");
-	  
-	  if (!png_fname)
-	       png_fname = replace_suffix(h5_fname, ".h5", ".png");
+	  if (!png_fname) {
+	       char dimname[] = "xyzt", suff[1024] = "";
+	       int dim;
+	       for (dim = 0; dim < 4; ++dim)
+		    if (islice_max[dim] >= islice_min[dim]+islice_step[dim]) {
+			 char s[128];
+			 sprintf(s, ".%c%0*d", dimname[dim], 
+				 1 + ilog10(imax(iabs(islice_min[dim]),
+						 iabs(islice_max[dim]))),
+				 islice[dim]);
+			 strcat(suff, s);
+		    }
+	       strcat(suff, ".png");
+	       png_fname = replace_suffix(h5_fname, ".h5", suff);
+	  }
 	  
 	  {
 	       double a_min, a_max;
@@ -443,9 +526,9 @@ int main(int argc, char **argv)
 		    min = a_min;
 	       if (!max_set)
 		    max = a_max;
-	       if (ifile == optind || a_min < allmin)
+	       if (!num_processed || a_min < allmin)
 		    allmin = a_min;
-	       if (ifile == optind || a_max > allmax)
+	       if (!num_processed || a_max > allmax)
 		    allmax = a_max;
 	       if (min > max) {
 		    a_min = min;
@@ -470,14 +553,26 @@ int main(int argc, char **argv)
 	       writepng(png_fname, nx, ny, !transpose, skew,
 			scaley, scalex, a.data, 
 			contour_fname ? contour_data.data : NULL, mask_thresh,
+			cnx, cny,
 			overlay_fname ? overlay_data.data : NULL,overlay_cmap, 
+			onx, ony,
 			min, max, cmap, eight_bit);
 	  }
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
 	  free(h5_fname);
+	  ++num_processed;
      }
-     if (verbose && optind < argc - 1)
+
+     if (contour_data.data)
+	  arrayh5_destroy(contour_data);
+     if (overlay_data.data)
+	  arrayh5_destroy(overlay_data);
+     contour_data.data = overlay_data.data = NULL;
+
+     } /* islice loop */
+
+     if (verbose && num_processed)
 	  printf("all data range from %g to %g.\n", allmin, allmax);
      if (collect_range) {
 	  if (!min_set)
@@ -489,11 +584,7 @@ int main(int argc, char **argv)
 	  goto process_files;
      }
 
-     if (contour_fname)
-	  arrayh5_destroy(contour_data);
      free(contour_fname);
-     if (overlay_fname)
-	  arrayh5_destroy(overlay_data);
      free(overlay_fname);
      free(data_name);
 

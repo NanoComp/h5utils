@@ -84,6 +84,14 @@ in the last dimension, whichever that might be.  See also the
 .B -0
 option to shift the origin of the x/y/z slice coordinates to the
 dataset center.
+
+Instead of specifying a single index as an argument to these options,
+you can also specify a range of indices in a Matlab-like notation:
+\fIstart\fR:\fIstep\fR:\fIend\fR or \fIstart\fR:\fIend\fR
+(\fIstep\fR defaults to 1).  This loops over that slice index, from
+\fIstart\fR to \fIend\fR in steps of \fIstep\fR, producing a
+sequence of output PNG files (with the slice index appended to the
+filename, before the ".png").
 .TP
 .B -0
 Shift the origin of the x/y/z slice coordinates to the dataset center,
@@ -186,8 +194,9 @@ otherwise the scale is set for each file individually.
 \fB\-C\fR \fIfile\fR, \fB\-b\fR \fIval\fR
 Superimpose contour outlines from the first dataset in the
 .I file
-HDF5 file, which should have the same dimensions as the input
-dataset, on all of the output images.  You can use the syntax
+HDF5 file on all of the output images.  (If the contour dataset does
+not have the same dimensions as the output data, it is peridically
+"tiled" over the output.)  You can use the syntax
 .I file:dataset
 to specify a particular dataset within the file.  The contour outlines
 are around a value of
@@ -202,8 +211,9 @@ dataset, on all of the output images, using the colormap
 .I colormap
 with opacity (from 0 for completely transparent to 1 for completely opaque)
 .I opacity
-multiplied by the opacity (alpha) values in the colormap.  You can use
-the syntax
+multiplied by the opacity (alpha) values in the colormap.  (If the
+overlay dataset does not have the same dimensions as the output data,
+it is peridically "tiled" over the output.)  You can use the syntax
 .I file:dataset
 to specify a particular dataset within the file.
 

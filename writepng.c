@@ -55,8 +55,10 @@ static void convert_row(int png_width, int data_width,
 			int stride, REAL *maskrow, REAL *maskrow2,
 			REAL mask_thresh, REAL *mask_prev, int init_mask_prev,
 			png_byte mask_byte,
+			int mny, int mstride,
 			int overlay, REAL *olayrow, REAL *olayrow2, 
 			colormap_t olay_cmap, REAL olaymin, REAL olaymax,
+			int ony, int ostride,
 			colormap_t cmap,
 			REAL minrange, REAL maxrange, REAL scale,
 			png_byte * row_pointer, int eight_bit)
@@ -81,38 +83,38 @@ static void convert_row(int png_width, int data_width,
 	  
 	  if (delta == 0.0) {
 	       val = (datarow[n * stride] * weightrow +
-		      datarow2[n * stride] * (1.0 - weightrow));
+		      datarow2[n * stride] * (1 - weightrow));
 	       if (maskrow != NULL) {
-		    maskval = (maskrow[n * stride] * weightrow +
-			       maskrow2[n * stride] * (1.0 - weightrow));
+		    maskval = (maskrow[(n%mny) * mstride] * weightrow +
+			       maskrow2[(n%mny) * mstride] * (1 - weightrow));
 	       }
 	       if (overlay)
-		    olayval = (olayrow[n * stride] * weightrow +
-			       olayrow2[n * stride] * (1.0 - weightrow));
+		    olayval = (olayrow[(n%ony) * ostride] * weightrow +
+			       olayrow2[(n%ony) * ostride] * (1 - weightrow));
 	  }
 	  else {
 	       int n2 = PIN(0, n + (delta < 0.0 ? -1 : 1), data_width-1);
 	       REAL absdelta = fabs(delta);
 	       val = 
-		    (datarow[n * stride] * (1.0 - absdelta) +
+		    (datarow[n * stride] * (1 - absdelta) +
 		     datarow[n2 * stride] * absdelta) * weightrow +
-		    (datarow2[n * stride] * (1.0 - absdelta) +
+		    (datarow2[n * stride] * (1 - absdelta) +
 		     datarow2[n2 * stride] * absdelta) * 
-		    (1.0 - weightrow);
+		    (1 - weightrow);
 	       if (overlay)
 		    olayval = 
-			 (olayrow[n * stride] * (1.0 - absdelta) +
-			  olayrow[n2 * stride] * absdelta) * weightrow +
-			 (olayrow2[n * stride] * (1.0 - absdelta) +
-			  olayrow2[n2 * stride] * absdelta) * 
-		    (1.0 - weightrow);
+			 (olayrow[(n%ony) * ostride] * (1 - absdelta) +
+			  olayrow[(n2%ony) * ostride] * absdelta) * weightrow +
+			 (olayrow2[(n%ony) * ostride] * (1 - absdelta) +
+			  olayrow2[(n2%ony) * ostride] * absdelta) * 
+		    (1 - weightrow);
 	       if (maskrow != NULL) {
 		    maskval = 
-			 (maskrow[n * stride] * (1.0 - absdelta) +
-			  maskrow[n2 * stride] * absdelta) * weightrow +
-			 (maskrow2[n * stride] * (1.0 - absdelta) +
-			  maskrow2[n2 * stride] * absdelta) * 
-			 (1.0 - weightrow);
+			 (maskrow[(n%mny) * mstride] * (1 - absdelta) +
+			  maskrow[(n2%mny) * mstride] * absdelta) * weightrow +
+			 (maskrow2[(n%mny) * mstride] * (1 - absdelta) +
+			  maskrow2[(n2%mny) * mstride] * absdelta) * 
+			 (1 - weightrow);
 	       }
 	  }
 
@@ -225,7 +227,9 @@ void writepng(char *filename,
 	      REAL skew, REAL scalex, REAL scaley,
 	      REAL * data,
 	      REAL *mask, REAL mask_thresh,
+	      int mnx, int mny,
 	      REAL *overlay, colormap_t overlay_cmap,
+	      int onx, int ony,
 	      REAL minrange, REAL maxrange,
 	      colormap_t colormap, int eight_bit)
 {
@@ -260,7 +264,7 @@ void writepng(char *filename,
      if (overlay) {
 	  int i;
 	  minoverlay = maxoverlay = overlay[0];
-	  for (i = 1; i < nx * ny; ++i) {
+	  for (i = 1; i < onx * ony; ++i) {
 	       if (minoverlay > overlay[i])
 		    minoverlay = overlay[i];
 	       if (maxoverlay < overlay[i])
@@ -393,29 +397,30 @@ void writepng(char *filename,
 		    offset = (x - (height-1)*scalex) * skewsin;
 	       if (transpose)
 		    convert_row(width, data_width, scaley, offset,
-				data + n, data + n2, 1.0 - fabs(delta),
+				data + n, data + n2, 1 - fabs(delta),
 				data_height, 
-				mask ? mask + n : NULL,
-				mask ? mask + n3 : NULL,
+				mask ? mask + (n%mny) : NULL,
+				mask ? mask + (n3%mny) : NULL,
 				mask_thresh, mask_prev, row == 0,
-				mask_byte,
+				mask_byte, mnx, mny,
 				overlay != 0,
-				overlay + n, overlay + n2,
-				overlay_cmap, minoverlay, maxoverlay,
+				overlay + (n%ony), overlay + (n2%ony),
+				overlay_cmap, minoverlay, maxoverlay, onx, ony,
 				colormap, minrange, maxrange, scale,
 				row_pointer, eight_bit);
 	       else
 		    convert_row(width, data_width, scaley, offset,
 				data + n * data_width, data + n2 * data_width,
-				1.0 - fabs(delta),
+				1 - fabs(delta),
 				1, 
-				mask ? mask + n * data_width : NULL,
-				mask ? mask + n3 * data_width : NULL,
+				mask ? mask + (n%mnx) * mny : NULL,
+				mask ? mask + (n3%mnx) * mny : NULL,
 				mask_thresh, mask_prev, row == 0,
-				mask_byte,
+				mask_byte, mny, 1,
 				overlay != 0,
-				overlay + n*data_width, overlay+n2*data_width,
-				overlay_cmap, minoverlay, maxoverlay,
+				overlay + (n%onx) * ony,
+				overlay + (n2%onx) * ony,
+				overlay_cmap, minoverlay, maxoverlay, ony, 1,
 				colormap, minrange, maxrange, scale,
 				row_pointer, eight_bit);
 	       png_write_rows(png_ptr, &row_pointer, 1);
@@ -486,6 +491,6 @@ void writepng_autorange(char *filename,
 	       range = newrange;
      }
      writepng(filename, nx, ny, transpose, skew, scalex, scaley,
-	      data, mask, mask_thresh, overlay, overlay_cmap,
+	      data, mask, mask_thresh, nx,ny, overlay, overlay_cmap, nx,ny,
 	      -range, range, colormap, eight_bit);
 }

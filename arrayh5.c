@@ -390,3 +390,47 @@ void arrayh5_write(arrayh5 a, char *filename, char *dataname,
      H5Dclose(data_id);
      H5Fclose(file_id);
 }
+
+int arrayh5_read_rank(const char *fname, const char *datapath, int *rank)
+{
+     hid_t file_id = -1, data_id = -1, space_id = -1;
+     char *dname = NULL;
+     int err = NO_ERROR;
+
+     file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
+     if (file_id < 0) {
+	  err = OPEN_FAILED;
+	  goto done;
+     }
+ 
+     if (datapath && datapath[0]) {
+	  CHK_MALLOC(dname, char, strlen(datapath) + 1);
+	  strcpy(dname, datapath);
+     }
+     else {
+	  if (H5Giterate(file_id, "/", NULL, find_dataset, &dname) <= 0) {
+	       err = NO_DATA;
+	       goto done;
+	  }
+     }
+
+     data_id = H5Dopen(file_id, dname);
+     if (data_id < 0) {
+	  err = OPEN_DATA_FAILED;
+	  goto done;
+     }
+
+     space_id = H5Dget_space(data_id);
+     *rank = H5Sget_simple_extent_ndims(space_id);
+
+ done:
+     if (space_id >= 0)
+	  H5Sclose(space_id);
+     if (data_id >= 0)
+	  H5Dclose(data_id);
+     free(dname);
+     if (file_id >= 0)
+	  H5Fclose(file_id);
+
+     return err;
+}

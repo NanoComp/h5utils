@@ -48,7 +48,9 @@ void writepng(char *filename,
 	      int nx, int ny, int transpose,
 	      REAL skew, REAL scalex, REAL scaley,
 	      REAL *data, REAL *mask, REAL mask_thresh,
+	      int mnx, int mny,
 	      REAL *overlay, colormap_t overlay_cmap,
+	      int onx, int ony,
 	      REAL minrange, REAL maxrange,
 	      colormap_t colormap, int eight_bit);
 
