@@ -240,6 +240,9 @@ int main(int argc, char **argv)
 		   return EXIT_FAILURE;
 	  }
 
+     if (colormap[0] == '-' || strstr(colormap, ".h5"))
+	  fprintf(stderr, "  -- Note that the the '-c' option syntax changed in h5topng 1.7!\n     To get the old behavior, use '-c bluered' ('man h5topng' for more info).\n");
+
      cmap_fname = (char *) malloc(sizeof(char) *
 				  (strlen(CMAP_DIR) + strlen(colormap) + 1));
      CHECK(cmap_fname, "out of memory");
@@ -255,8 +258,6 @@ int main(int argc, char **argv)
 	       else {
 		    fprintf(stderr, "Could not find colormap \"%s\"\n",
 			    colormap);
-		    if (colormap[0] == '-' || strstr(colormap, ".h5"))
-			 fprintf(stderr, "  -- Note that the the '-c' option syntax changed in h5topng 1.7!\n     To get the old behavior, use '-c bluered' ('man h5topng' for more info).\n");
 		    exit(EXIT_FAILURE);
 	       }
 	  }
