@@ -1,3 +1,9 @@
+h5utils 1.3 (1/21/00)
+
+  * You can now specify individual datasets within a file by using
+    <filename>:<dataset> instead of just <filename> with h5topng,
+    h5totxt, and h5tov5d.
+
 h5utils 1.2.3: (1/20/00)
 
   * Fixed minor bug in 'h5totxt -h'.
