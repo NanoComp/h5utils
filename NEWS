@@ -20,7 +20,8 @@ h5utils 1.8 (mm/dd/yy)
 
   * Slices are also supported now in h5tovtk and h5tov5d.
 
-  * New -. option in h5totxt to specify number of significant digits.
+  * New -. option in h5totxt to specify number of significant digits; 
+    output 16 digits by default instead of 6, previously.
 
 h5utils 1.7.1 (3/16/02)
 
