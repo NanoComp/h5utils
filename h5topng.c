@@ -32,6 +32,7 @@
 #include "arrayh5.h"
 #include "copyright.h"
 #include "writepng.h"
+#include "h5utils.h"
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5topng error: %s\n", msg); exit(EXIT_FAILURE); } }
 
@@ -67,34 +68,6 @@ void usage(FILE *f)
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n"
 	  );
-}
-
-/* given an fname of the form <filename>:<data_name>, return a pointer
-   to a newly-allocated string containing <filename>, and point data_name
-   to the position of <data_name> in fname.  The user must free() the
-   <filename> string. */
-static char *split_fname(char *fname, char **data_name)
-{
-     int fname_len;
-     char *colon, *filename;
-
-     fname_len = strlen(fname);
-     colon = strchr(fname, ':');
-     if (colon) {
-          int colon_len = strlen(colon);
-          filename = (char*) malloc(sizeof(char) * (fname_len-colon_len+1));
-          CHECK(filename, "out of memory");
-          strncpy(filename, fname, fname_len-colon_len+1);
-	  filename[fname_len-colon_len] = 0;
-          *data_name = colon + 1;
-     }
-     else { /* treat as if ":" were at the end of fname */
-          filename = (char*) malloc(sizeof(char) * (fname_len + 1));
-          CHECK(filename, "out of memory");
-          strcpy(filename, fname);
-          *data_name = fname + fname_len;
-     }
-     return filename;
 }
 
 rgba_t gray_colors[2] = { {1,1,1,1}, {0,0,0,1} };
@@ -354,20 +327,8 @@ int main(int argc, char **argv)
 	  CHECK(!contour_fname || arrayh5_conformant(a, contour_data),
 		"contour data must be conformant with source data");
 	  
-	  if (!png_fname) {
-	       png_fname = (char *) malloc(sizeof(char) * 
-					   (strlen(h5_fname) + 5));
-	       strcpy(png_fname, h5_fname);
-	       
-	       /* remove ".h5" from filename: */
-	       if (strlen(png_fname) >= strlen(".h5") &&
-		   !strcmp(png_fname + strlen(png_fname) - strlen(".h5"),
-			   ".h5"))
-		    png_fname[strlen(png_fname) - strlen(".h5")] = 0;
-	       
-	       /* add ".png": */
-	       strcat(png_fname, ".png");
-	  }
+	  if (!png_fname)
+	       png_fname = replace_suffix(h5_fname, ".h5", ".png");
 	  
 	  {
 	       double a_min, a_max;

@@ -35,6 +35,7 @@
 #include "config.h"
 #include "arrayh5.h"
 #include "copyright.h"
+#include "h5utils.h"
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5tovtk error: %s\n", msg); exit(EXIT_FAILURE); } }
 
@@ -59,54 +60,6 @@ void usage(FILE *f)
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n"
 	  );
-}
-
-char *replace_suffix(const char *s, const char *old_suff, const char *new_suff)
-{
-     char *new_s;
-     int s_len, old_suff_len, new_suff_len;
-
-     s_len = strlen(s);
-     old_suff_len = strlen(old_suff);
-     new_suff_len = strlen(new_suff);
-
-     new_s = (char*) malloc(sizeof(char) * (s_len + new_suff_len + 1));
-     CHECK(new_s, "out of memory");
-
-     strcpy(new_s, s);
-     if (s_len >= old_suff_len && !strcmp(new_s + s_len - old_suff_len,
-					  old_suff))
-	  new_s[s_len - old_suff_len] = 0;  /* delete old suffix */
-     strcat(new_s, new_suff);
-     return new_s;
-}
-
-/* given an fname of the form <filename>:<data_name>, return a pointer
-   to a newly-allocated string containing <filename>, and point data_name
-   to the position of <data_name> in fname.  The user must free() the
-   <filename> string. */
-static char *split_fname(char *fname, char **data_name)
-{
-     int fname_len;
-     char *colon, *filename;
-
-     fname_len = strlen(fname);
-     colon = strchr(fname, ':');
-     if (colon) {
-	  int colon_len = strlen(colon);
-	  filename = (char*) malloc(sizeof(char) * (fname_len-colon_len+1));
-	  CHECK(filename, "out of memory");
-	  strncpy(filename, fname, fname_len-colon_len+1);
-	  filename[fname_len-colon_len] = 0;
-	  *data_name = colon + 1;
-     }
-     else { /* treat as if ":" were at the end of fname */
-	  filename = (char*) malloc(sizeof(char) * (fname_len + 1));
-	  CHECK(filename, "out of memory");
-	  strcpy(filename, fname);
-	  *data_name = fname + fname_len;
-     }
-     return filename;
 }
 
 static void whitespace_to_underscores(char *s)
@@ -296,20 +249,9 @@ int main(int argc, char **argv)
 	  CHECK(!combine || !ia || arrayh5_conformant(a[ia], a[0]),
 		"all arrays must be conformant to combine them");
 	  
-	  if (!vtk_fname) {
-	       vtk_fname = (char *) malloc(sizeof(char) * 
-					   (strlen(h5_fname) + 5));
-	       strcpy(vtk_fname, h5_fname);
-	       
-	       /* remove ".h5" from filename: */
-	       if (strlen(vtk_fname) >= strlen(".h5") &&
-		   !strcmp(vtk_fname + strlen(vtk_fname) - strlen(".h5"),
-			   ".h5"))
-		    vtk_fname[strlen(vtk_fname) - strlen(".h5")] = 0;
-	       
-	       /* add ".vtk": */
-	       strcat(vtk_fname, ".vtk");
-	  }
+	  if (!vtk_fname)
+	       vtk_fname = replace_suffix(h5_fname, ".h5", ".vtk");
+
 	  {
 	       double a_min, a_max;
 	       arrayh5_getrange(a[ia], &a_min, &a_max);

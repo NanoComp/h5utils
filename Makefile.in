@@ -17,12 +17,12 @@ distdir = $(package)-$(VERSION)
 
 ###########################################################################
 
-OBJ_h5topng = h5topng.o arrayh5.o writepng.o
-SRC_h5read = h5read.cc arrayh5.o
-OBJ_h5totxt = h5totxt.o arrayh5.o
-OBJ_h5tovtk = h5tovtk.o arrayh5.o
-OBJ_h5fromtxt = h5fromtxt.o arrayh5.o
-OBJ_h5fromh4 = h5fromh4.o arrayh5.o arrayh4.o
+OBJ_h5topng = h5topng.o arrayh5.o h5utils.o writepng.o
+SRC_h5read = h5read.cc arrayh5.o h5utils.o
+OBJ_h5totxt = h5totxt.o arrayh5.o h5utils.o
+OBJ_h5tovtk = h5tovtk.o arrayh5.o h5utils.o
+OBJ_h5fromtxt = h5fromtxt.o arrayh5.o h5utils.o
+OBJ_h5fromh4 = h5fromh4.o arrayh5.o h5utils.o arrayh4.o
 
 OCT_INSTALL_DIR = @OCT_INSTALL_DIR@
 H5READ_INSTALL_TARGET = @H5READ_INSTALL_TARGET@
@@ -59,9 +59,9 @@ h5fromtxt: $(OBJ_h5fromtxt)
 h5fromh4: $(OBJ_h5fromh4)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5fromh4) @H4_LIBS@ $(LIBS) -o $@
 
-h5tov5d: h5tov5d.o
+h5tov5d: h5tov5d.o arrayh5.o h5utils.o
 	$(CC) $(CFLAGS) $(LDFLAGS) h5tov5d.o $(V5D_FILES) \
-              arrayh5.o $(LIBS) -o $@
+              arrayh5.o h5utils.o $(LIBS) -o $@
 
 h5tov5d.o: h5tov5d.c
 	$(CC) -c $(DEFS) $(CPPFLAGS) $(V5D_INCLUDES) $(CFLAGS) $< -o $@
@@ -166,7 +166,7 @@ dist:
 	rm -rf $(distdir)
 
 clean:
-	rm -f h5topng.o h5tov5d.o h5totxt.o h5tovtk.o h5fromtxt.o h5fromh4.o h5read.o arrayh5.o arrayh4.o writepng.o $(TARGETS) core a.out octave-core
+	rm -f h5topng.o h5tov5d.o h5totxt.o h5tovtk.o h5fromtxt.o h5fromh4.o h5read.o arrayh5.o h5utils.o arrayh4.o writepng.o $(TARGETS) core a.out octave-core
 
 distclean: clean
 	rm -f config.cache Makefile config.log config.status config.h $(TARGETS)

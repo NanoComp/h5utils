@@ -30,6 +30,7 @@
 #include "arrayh5.h"
 #include "arrayh4.h"
 #include "copyright.h"
+#include "h5utils.h"
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5fromh4 error: %s\n", msg); exit(EXIT_FAILURE); } }
 
@@ -46,35 +47,6 @@ void usage(FILE *f)
 	     "              -- you can also specify a dataset via <file>:<name>\n"
 	  );
 }
-
-/* given an fname of the form <filename>:<data_name>, return a pointer
-   to a newly-allocated string containing <filename>, and point data_name
-   to the position of <data_name> in fname.  The user must free() the
-   <filename> string. */
-static char *split_fname(char *fname, char **data_name)
-{
-     int fname_len;
-     char *colon, *filename;
-
-     fname_len = strlen(fname);
-     colon = strchr(fname, ':');
-     if (colon) {
-          int colon_len = strlen(colon);
-          filename = (char*) malloc(sizeof(char) * (fname_len-colon_len+1));
-          CHECK(filename, "out of memory");
-          strncpy(filename, fname, fname_len-colon_len+1);
-	  filename[fname_len-colon_len] = 0;
-          *data_name = colon + 1;
-     }
-     else { /* treat as if ":" were at the end of fname */
-          filename = (char*) malloc(sizeof(char) * (fname_len + 1));
-          CHECK(filename, "out of memory");
-          strcpy(filename, fname);
-          *data_name = fname + fname_len;
-     }
-     return filename;
-}
-
 
 int main(int argc, char **argv)
 {
@@ -134,20 +106,8 @@ int main(int argc, char **argv)
 	  char *cur_h5_fname = h5_fname;
 	  arrayh5 a;
 
-	  if (!cur_h5_fname) {
-	       cur_h5_fname = (char *) malloc(sizeof(char) * 
-					   (strlen(h4_fname) + 5));
-	       strcpy(cur_h5_fname, h4_fname);
-	       
-	       /* remove ".hdf" from filename: */
-	       if (strlen(cur_h5_fname) >= strlen(".hdf") &&
-		   !strcmp(cur_h5_fname + strlen(cur_h5_fname)-strlen(".hdf"),
-			   ".hdf"))
-		    cur_h5_fname[strlen(cur_h5_fname) - strlen(".hdf")] = 0;
-	       
-	       /* add ".h5": */
-	       strcat(cur_h5_fname, ".h5");
-	  }
+	  if (!cur_h5_fname)
+	       cur_h5_fname = replace_suffix(h4_fname, ".hdf", ".h5");
 
 	  /* If we specified -o (to concatenate several HDF4 files into
 	     a single HDF5 file) and if there is more than one filename
