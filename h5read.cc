@@ -62,7 +62,7 @@ DEFUN_DLD(h5read, args, ,
      readerr = arrayh5_read(&a, fname.c_str(),
 			    args.length() >= 4 ? 
 			    args(3).string_value().c_str() : NULL, 
-			    slicedim, islice);
+			    NULL, slicedim, islice);
      if (readerr) {
 	  fprintf(stderr, "error in h5read: %s\n",
 		  arrayh5_read_strerror[readerr]);
