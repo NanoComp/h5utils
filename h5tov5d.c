@@ -29,8 +29,11 @@
 #include "arrayh5.h"
 
 /* Vis5d header files: */
-#include <binio.h>
-#include <v5d.h>
+#ifdef HAVE_VIS5D_V5D_H
+#  include <vis5d/v5d.h>
+#else
+#  include <v5d.h>
+#endif
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5tov5d error: %s\n", msg); exit(EXIT_FAILURE); } }
 
@@ -52,7 +55,7 @@ void usage(FILE *f)
 char *replace_suffix(const char *s, const char *old_suff, const char *new_suff)
 {
      char *new_s;
-     int s_len, old_suff_len, new_suff_len, new_s_len;
+     int s_len, old_suff_len, new_suff_len;
 
      s_len = strlen(s);
      old_suff_len = strlen(old_suff);
@@ -297,13 +300,11 @@ void output_v5d(char *v5d_fname, char *data_label,
 
 int main(int argc, char **argv)
 {
-     arrayh5 a;
      char *v5d_fname = NULL, *data_name = NULL;
      extern char *optarg;
      extern int optind;
      int c;
      int verbose = 0;
-     int ifile;
      int store_bytes = 1;
 
      while ((c = getopt(argc, argv, "ho:d:vV124")) != -1)

@@ -46,7 +46,7 @@ h5topng: $(OBJ_h5topng)
 h5totxt: $(OBJ_h5totxt)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5totxt) $(LIBS) -o $@
 
-h5tov5d: h5tov5d.o $(V5D_FILES)
+h5tov5d: h5tov5d.o
 	$(CC) $(CFLAGS) $(LDFLAGS) h5tov5d.o $(V5D_FILES) \
               arrayh5.o $(LIBS) -o $@
 

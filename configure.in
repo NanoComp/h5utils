@@ -80,11 +80,14 @@ AC_SUBST(H5READ_UNINSTALL_TARGET)
 
 ###########################################################################
 
-AC_ARG_WITH(v5d, [  --with-v5d=<dir>        use Vis5d in <dir> for h5tov5d], ok=$withval, ok=no)
+AC_ARG_WITH(v5d, [  --with-v5d=<dir>        use Vis5d in <dir> for h5tov5d], ok=$withval, ok=yes)
 H5TOV5D_TARGET=""
 V5D_FILES=""
 V5D_INCLUDES=""
-if test "$ok" != "no"; then
+if test "$ok" = "yes"; then
+	AC_CHECK_LIB(v5d, v5dCreate, V5D_FILES="-lv5d"; H5TOV5D_TARGET=h5tov5d)
+	AC_CHECK_HEADERS(vis5d/v5d.h)
+elif test "$ok" != "no"; then
 	AC_MSG_CHECKING(for Vis5d object files and headers)
 	if test -r "$ok/src/v5d.o" -a -r "$ok/src/binio.o" -a -r "$ok/src/v5d.h" -a -r "$ok/src/binio.h"; then
 		V5D_FILES="$ok/src/v5d.o $ok/src/binio.o"
