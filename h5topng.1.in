@@ -107,14 +107,14 @@ transposition is done.
 .B -c \fIcolormap\fR
 Use a color map 
 .I colormap
-instead of the default color map 
+rather than the default
 .B gray
-(a grayscale ramp from white to black.)
+color map (a grayscale ramp from white to black).
 .I colormap
-is normally one of the colormap files provided with 
+is normally the name of one of the color maps provided with 
 .I h5topng
-(in the @datadir_val@/h5utils/colormaps directory), or can be the name
-of a color map file.
+(in the @datadir_val@/h5utils/colormaps directory), or can instead be
+the name of a color-map file.
 
 Three useful included color maps are
 .B hot
@@ -124,13 +124,12 @@ Three useful included color maps are
 .B hsv
 (a multi-color "rainbow").  If you use the
 .B bluered
-color map for data with positive and negative values, you may also want
-to use the
+color map for signed data, you may also want to use the
 .B -Z
 option so that the center of the color scale (white) corresponds to
 zero.
 
-A color map file is a sequence of whitespace-separated R G B triples,
+A color-map file is a sequence of whitespace-separated R G B triples,
 where each value is in the range 0.0 to 1.0 and indicates the fraction
 of red/green/blue.  The colors in the color map are linearly
 interpolated as necessary to provide an 8-bit color palette.
