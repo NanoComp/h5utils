@@ -1,3 +1,7 @@
+h5utils 1.2.3: (1/20/00)
+
+  * Fixed minor bug in 'h5totxt -h'.
+
 h5utils 1.2.2: (1/12/00)
 
   * Makefile now includes CPPFLAGS in the compiler flags, making it
