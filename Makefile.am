@@ -1,4 +1,10 @@
-EXTRA_DIST = COPYRIGHT h5read.cc
+COLORMAPS = colormaps/autumn colormaps/bluered colormaps/bone		\
+colormaps/colorcube colormaps/cool colormaps/copper colormaps/flag	\
+colormaps/gray colormaps/hot colormaps/hsv colormaps/jet		\
+colormaps/lines colormaps/pink colormaps/prism colormaps/spring		\
+colormaps/summer colormaps/vga colormaps/winter
+
+EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS)
 
 bin_PROGRAMS = h5totxt h5fromtxt h5tovtk @MORE_H5UTILS@
 EXTRA_PROGRAMS = h5topng h5tov5d h5fromh4
@@ -20,7 +26,7 @@ h5tov5d_SOURCES = h5tov5d.c $(COMMON_SRC)
 h5tov5d_CPPFLAGS = $(AM_CPPFLAGS) @V5D_INCLUDES@
 h5tov5d_LDADD = @V5D_FILES@
 
-h5fromh4_SOURCES = h5fromh4 arrayh4.c arrayh4.h $(COMMON_SRC)
+h5fromh4_SOURCES = h5fromh4.c arrayh4.c arrayh4.h $(COMMON_SRC)
 h5fromh4_LDADD = @H4_LIBS@
 
 octdir = @OCT_INSTALL_DIR@
@@ -32,8 +38,4 @@ h5read.oct: h5read.cc arrayh5.h arrayh5.o
 clean-hook:
 	rm -f h5read.oct
 
-nobase_dist_pkgdata_DATA = colormaps/autumn colormaps/bluered		\
-colormaps/bone colormaps/colorcube colormaps/cool colormaps/copper	\
-colormaps/flag colormaps/gray colormaps/hot colormaps/hsv		\
-colormaps/jet colormaps/lines colormaps/pink colormaps/prism		\
-colormaps/spring colormaps/summer colormaps/vga colormaps/winter
+nobase_dist_pkgdata_DATA = $(COLORMAPS)

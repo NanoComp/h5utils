@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.7)
+AC_INIT(h5utils, 1.8beta)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([h5topng.c])
 AM_CONFIG_HEADER(config.h)
@@ -68,11 +68,11 @@ if test "x$H4TOH5" != xh4toh5; then
 		[AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4])])
 
 	if test $H5FROMH4 = yes; then
-		AC_CHECK_HEADERS(hdf.h hdf/hdf.h)
 		MORE_H5UTILS="h5fromh4 $MORE_H5UTILS"
 		MORE_H5UTILS_MANS="h5fromh4.1 $MORE_H5UTILS_MANS"
 	fi
 fi
+AC_CHECK_HEADERS(hdf.h hdf/hdf.h)
 
 AC_SUBST(H4_LIBS)
 
