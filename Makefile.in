@@ -1,0 +1,53 @@
+CC = @CC@
+CFLAGS = @CFLAGS@
+DEFS = @DEFS@
+LIBS = @LIBS@
+LDFLAGS = @LDFLAGS@
+INSTALL = @INSTALL@
+prefix = @prefix@
+transform=@program_transform_name@  # c.f. AC_ARG_PROGRAM autoconf docs
+@SET_MAKE@
+
+VERSION = @VERSION@
+package = h5utils
+distdir = $(package)-$(VERSION)
+
+OBJ_h5topng = h5topng.o arrayh5.o writepng.o
+OBJ_h5read = h5read.cc arrayh5.o
+
+H5TOPNG_TARGET = @H5TOPNG_TARGET@
+H5READ_TARGET = @H5READ_TARGET@
+PNG_LIBS = @PNG_LIBS@
+
+TARGETS = $(H5TOPNG_TARGET) $(H5READ_TARGET)
+
+all: $(TARGETS)
+
+h5read.oct: $(OBJ_h5read)
+	mkoctfile $(OBJ_h5read) $(LIBS)
+
+h5topng: $(OBJ_h5topng)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5topng) $(PNG_LIBS) $(LIBS) -o $@
+
+.c.o:
+	$(CC) -c $(DEFS) $(CFLAGS) $< -o $@
+
+install: $(H5TOPNG_TARGET)
+	$(INSTALL) -d $(prefix)/bin
+	$(INSTALL) -m 0755 -s h5topng $(prefix)/bin/`echo h5topng|sed '$(transform)'`
+
+uninstall:
+	rm -f $(prefix)/bin/h5topng
+
+dist:
+	cvs export -D now -d $(distdir) $(package)
+	pushd $(distdir) && autoconf && popd
+	rm -f $(distdir).tar.gz
+	GZIP="--best" tar chozf $(distdir).tar.gz $(distdir)
+	rm -rf $(distdir)
+
+clean:
+	rm -f $(OBJ_h5topng) $(TARGETS) core a.out octave-core
+
+distclean: clean
+	rm -f config.cache Makefile config.log config.status
