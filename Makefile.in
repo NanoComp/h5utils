@@ -13,33 +13,40 @@ package = h5utils
 distdir = $(package)-$(VERSION)
 
 OBJ_h5topng = h5topng.o arrayh5.o writepng.o
-OBJ_h5read = h5read.cc arrayh5.o
+SRC_h5read = h5read.cc arrayh5.o
+OBJ_h5totxt = h5totxt.o arrayh5.o
 
 H5TOPNG_TARGET = @H5TOPNG_TARGET@
 H5READ_TARGET = @H5READ_TARGET@
 PNG_LIBS = @PNG_LIBS@
 
-TARGETS = $(H5TOPNG_TARGET) $(H5READ_TARGET)
+TARGETS = $(H5TOPNG_TARGET) $(H5READ_TARGET) h5totxt
 
 all: $(TARGETS)
 
-h5read.oct: $(OBJ_h5read)
-	mkoctfile $(OBJ_h5read) $(LIBS)
+h5read.oct: $(SRC_h5read)
+	mkoctfile $(SRC_h5read) $(LIBS)
 
 h5topng: $(OBJ_h5topng)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5topng) $(PNG_LIBS) $(LIBS) -o $@
 
+h5totxt: $(OBJ_h5totxt)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5totxt) $(LIBS) -o $@
+
 .c.o:
 	$(CC) -c $(DEFS) $(CFLAGS) $< -o $@
 
-install: $(H5TOPNG_TARGET)
+install: $(H5TOPNG_TARGET) h5totxt
 	$(INSTALL) -d $(prefix)/bin
 	$(INSTALL) -d $(prefix)/man/man1
 	$(INSTALL) -m 0755 -s h5topng $(prefix)/bin/`echo h5topng|sed '$(transform)'`
+	$(INSTALL) -m 0755 -s h5totxt $(prefix)/bin/`echo h5totxt|sed '$(transform)'`
 	$(INSTALL) -m 0644 h5topng.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 h5totxt.1 $(prefix)/man/man1
 
 uninstall:
 	rm -f $(prefix)/bin/h5topng
+	rm -f $(prefix)/bin/h5totxt
 
 dist:
 	cvs export -D now -d $(distdir) $(package)
@@ -49,10 +56,10 @@ dist:
 	rm -rf $(distdir)
 
 clean:
-	rm -f $(OBJ_h5topng) h5read.o $(TARGETS) core a.out octave-core
+	rm -f $(OBJ_h5topng) h5totxt.o h5read.o $(TARGETS) core a.out octave-core
 
 distclean: clean
-	rm -f config.cache Makefile config.log config.status config.h
+	rm -f config.cache Makefile config.log config.status config.h $(TARGETS)
 
 maintainer-clean: distclean
 	rm -f configure

@@ -1,0 +1,8 @@
+h5utils 1.1:  (12/6/99)
+
+  * Added h5totxt program for exporting 2d slices of HDF5 files to text
+    suitable for importing into a spreadsheet.
+
+h5utils 1.0:  (11/22/99)
+
+  * Initial release.
