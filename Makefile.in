@@ -40,7 +40,7 @@ all: $(TARGETS)
 ###########################################################################
 
 h5read.oct: $(SRC_h5read)
-	mkoctfile $(SRC_h5read) $(LIBS)
+	mkoctfile $(DEFS) $(CPPFLAGS) $(SRC_h5read) $(LDFLAGS) $(LIBS)
 
 h5topng: $(OBJ_h5topng)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_h5topng) $(PNG_LIBS) $(LIBS) -o $@
@@ -59,7 +59,7 @@ h5tov5d: h5tov5d.o
               arrayh5.o $(LIBS) -o $@
 
 h5tov5d.o: h5tov5d.c
-	$(CC) -c $(DEFS) $(V5D_INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) -c $(DEFS) $(CPPFLAGS) $(V5D_INCLUDES) $(CFLAGS) $< -o $@
 
 .c.o:
 	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) $< -o $@
