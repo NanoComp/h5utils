@@ -4,7 +4,7 @@
 /* License and copyright string for inclusion in program output: */
 
 #define COPYRIGHT \
-"Copyright (c) 1999, 2000 Massachusetts Institute of Technology\n"\
+"Copyright (c) 1999, 2000, 2001 Massachusetts Institute of Technology\n"\
 "\n"\
 "Permission is hereby granted, free of charge, to any person obtaining\n"\
 "a copy of this software and associated documentation files (the\n"\

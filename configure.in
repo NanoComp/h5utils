@@ -2,7 +2,7 @@
 AC_INIT(h5topng.c)
 AC_CONFIG_HEADER(config.h)
 
-VERSION=1.5.1
+VERSION=1.6
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [h5utils version number string])
 AC_SUBST(VERSION)
 
@@ -46,14 +46,27 @@ AC_SUBST(PNG_LIBS)
 
 ###########################################################################
 
-AC_CHECK_LIB(jpeg, jpeg_start_compress,
-	AC_CHECK_LIB(df, DFSDgetdata,
-		H4_LIBS="-ldf -ljpeg"; H5FROMH4_TARGET=h5fromh4,
-		AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4]), -ljpeg),
-	AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4]))
+# Only build h5fromh4 if we are using a version of HDF5 prior to 1.4, and
+# thus don't have the superior h4toh5 utility.
+AC_CHECK_PROG(H4TOH5, h4toh5, h4toh5)
 
-if test "x$H5FROMH4_TARGET" = xh5fromh4; then
-	AC_CHECK_HEADERS(hdf.h hdf/hdf.h)
+AC_ARG_WITH(h5fromh4, [  --without-h5fromh4      don't compile h5fromh4], ok=$withval, ok=maybe)
+if test "x$ok" = xyes; then
+	H4TOH5=""
+elif test "x$ok" = xno; then
+	H4TOH5="h4toh5"
+fi
+
+if test "x$H4TOH5" != xh4toh5; then
+	AC_CHECK_LIB(jpeg, jpeg_start_compress,
+		AC_CHECK_LIB(df, DFSDgetdata,
+			H4_LIBS="-ldf -ljpeg"; H5FROMH4_TARGET=h5fromh4,
+			AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4]), -ljpeg),
+		AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4]))
+
+	if test "x$H5FROMH4_TARGET" = xh5fromh4; then
+		AC_CHECK_HEADERS(hdf.h hdf/hdf.h)
+	fi
 fi
 
 AC_SUBST(H5FROMH4_TARGET)

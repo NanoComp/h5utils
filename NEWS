@@ -1,3 +1,9 @@
+h5utils 1.6 (1/17/01)
+
+  * Don't build h5fromh4 if the superior h4toh5 tool (from HDF5 1.4)
+    is present.  Also added --{with,without}-h5fromh4 option to
+    configure to force whether h5fromh4 is built.
+
 h5utils 1.5.1 (12/9/00)
 
   * Support manually disabling Octave plugin support
