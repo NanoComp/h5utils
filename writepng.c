@@ -248,15 +248,14 @@ void writepng(char *filename,
      {
 	  png_colorp palette;
 
-	  /* set the palette if there is one.  REQUIRED for indexed-color
-	   * images */
-
-	  palette = (png_colorp) png_malloc(png_ptr, 256 * sizeof(png_color));
-	  init_palette(palette, colormap);
-	  png_set_PLTE(png_ptr, info_ptr, palette, 256);
-
 	  /* initialize alpha channel (if any) via png_set_tRNS */
 	  init_alpha(png_ptr, info_ptr, colormap);
+	  palette = (png_colorp) png_malloc(png_ptr, 256 * sizeof(png_color));
+
+	  /* set the palette if there is one.  REQUIRED for indexed-color
+	   * images */
+	  init_palette(palette, colormap);
+	  png_set_PLTE(png_ptr, info_ptr, palette, 256);
      }
 
      /* Write the file header information.  REQUIRED */
