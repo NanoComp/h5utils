@@ -1,4 +1,4 @@
-h5utils 1.7 (not yet released)
+h5utils 1.7 (3/9/02)
 
   * h5topng now supports multiple, user-definable color tables, a number
     of which are provided.  INCOMPATIBLE CHANGE: the -c option now has
