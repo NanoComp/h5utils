@@ -257,10 +257,6 @@ int main(int argc, char **argv)
 		   usage(stderr);
 		   return EXIT_FAILURE;
 	  }
-     if (optind == argc) {  /* no parameters left */
-	  usage(stderr);
-	  return EXIT_FAILURE;
-     }
 
      cmap_fname = (char *) malloc(sizeof(char) *
 				  (strlen(CMAP_DIR) + strlen(colormap) + 1));
@@ -277,6 +273,8 @@ int main(int argc, char **argv)
 	       else {
 		    fprintf(stderr, "Could not find colormap \"%s\"\n",
 			    colormap);
+		    if (colormap[0] == '-' || strstr(colormap, ".h5"))
+			 fprintf(stderr, "  -- Note that the the '-c' option syntax changed in h5topng 1.7!\n     To get the old behavior, use '-c bluered' ('man h5topng' for more info).\n");
 		    exit(EXIT_FAILURE);
 	       }
 	  }
@@ -291,6 +289,11 @@ int main(int argc, char **argv)
 		      colormap, cmap_fname);
 	  cmap = load_colormap(cmap_f, verbose);
 	  fclose(cmap_f);
+     }
+
+     if (optind == argc) {  /* no parameters left */
+	  usage(stderr);
+	  return EXIT_FAILURE;
      }
 
      if (contour_fname) {
