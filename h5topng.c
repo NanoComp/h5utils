@@ -95,6 +95,9 @@ static char *split_fname(char *fname, char **data_name)
      return filename;
 }
 
+rgb_t gray_colors[2] = { {1,1,1}, {0,0,0} };
+colormap_t gray_cmap = { 2, gray_colors };
+
 static colormap_t load_colormap(FILE *f, int verbose)
 {
      colormap_t cmap = {0, NULL};
@@ -151,7 +154,7 @@ int main(int argc, char **argv)
      int nx, ny;
      char *colormap = NULL, *cmap_fname = NULL;
      FILE *cmap_f = NULL;
-     colormap_t cmap;
+     colormap_t cmap = { 0, NULL };
      int verbose = 0;
      int transpose = 0;
      int zero_center = 0;
@@ -269,15 +272,26 @@ int main(int argc, char **argv)
 	  CHECK(cmap_fname, "out of memory");
 	  strcpy(cmap_fname, colormap);
 	  if (!(cmap_f = fopen(cmap_fname, "r"))) {
-	       fprintf(stderr, "Could not open colormap \"%s\"\n", colormap);
-	       exit(EXIT_FAILURE);
+	       if (!strcmp(colormap, "gray"))
+		    cmap = gray_cmap;
+	       else {
+		    fprintf(stderr, "Could not find colormap \"%s\"\n",
+			    colormap);
+		    exit(EXIT_FAILURE);
+	       }
 	  }
      }
-     if (verbose)
-	  printf("Using colormap \"%s\" in file \"%s\".\n",
-		 colormap, cmap_fname);
-     cmap = load_colormap(cmap_f, verbose);
-     fclose(cmap_f);
+     if (cmap.rgb == gray_colors) {
+	  if (verbose)
+	       printf("Using built-in gray colormap.\n");
+     }
+     else {
+	  if (verbose)
+	       printf("Using colormap \"%s\" in file \"%s\".\n",
+		      colormap, cmap_fname);
+	  cmap = load_colormap(cmap_f, verbose);
+	  fclose(cmap_f);
+     }
 
      if (contour_fname) {
 	  int cnx, cny;
@@ -381,7 +395,8 @@ int main(int argc, char **argv)
      free(contour_fname);
      free(data_name);
 
-     free(cmap.rgb);
+     if (cmap.rgb != gray_colors)
+	  free(cmap.rgb);
      free(cmap_fname);
      free(colormap);
 
