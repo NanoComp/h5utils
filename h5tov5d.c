@@ -44,7 +44,8 @@ void usage(FILE *f)
 	     "  -o <file> : output datasets from all input files to <file>\n"
 "   -1,-2,-4 : number of bytes per data point to use in output (default: 1)\n"
 	     "              (fewer bytes is faster, but has less resolution)\n"
-	     "  -d <name> : use dataset <name> in the input file (default: first dataset)\n"
+	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
+	     "           -- you can also specify a dataset via <filename>:<name>\n"
 	  );
 }
 
@@ -68,6 +69,34 @@ char *replace_suffix(const char *s, const char *old_suff, const char *new_suff)
      return new_s;
 }
 
+/* given an fname of the form <filename>:<data_name>, return a pointer
+   to a newly-allocated string containing <filename>, and point data_name
+   to the position of <data_name> in fname.  The user must free() the
+   <filename> string. */
+static char *split_fname(char *fname, char **data_name)
+{
+     int fname_len;
+     char *colon, *filename;
+
+     fname_len = strlen(fname);
+     colon = strchr(fname, ':');
+     if (colon) {
+	  int colon_len = strlen(colon);
+	  filename = (char*) malloc(sizeof(char) * (fname_len-colon_len+1));
+	  CHECK(filename, "out of memory");
+	  strncpy(filename, fname, fname_len-colon_len+1);
+	  filename[fname_len-colon_len] = 0;
+	  *data_name = colon + 1;
+     }
+     else { /* treat as if ":" were at the end of fname */
+	  filename = (char*) malloc(sizeof(char) * (fname_len + 1));
+	  CHECK(filename, "out of memory");
+	  strcpy(filename, fname);
+	  *data_name = fname + fname_len;
+     }
+     return filename;
+}
+
 /* The following routine was adapted from convert/foo2_to_v5d.c from
    Vis5D 4.2, which is Copyright (C) 1990-1997 Bill Hibbard, Johan
    Kellum, Brian Paul, Dave Santek, and Andre Battaiola, and is
@@ -76,6 +105,8 @@ void output_v5d(char *v5d_fname, char *data_label,
 		int store_bytes,
 		char **h5_fnames, int num_h5, int join)
 {
+     char *data_name;
+     char *fname;
      arrayh5 a;
      int it, iv, firstdim, ifile;
      float *g;
@@ -98,7 +129,10 @@ void output_v5d(char *v5d_fname, char *data_label,
 
      for (ifile = 0; ifile < num_h5; ++ifile) {
 	  int err;
-	  err = arrayh5_read(&a, h5_fnames[ifile], data_label, -1, 0);
+	  fname = split_fname(h5_fnames[ifile], &data_name);
+	  if (!data_name[0]) data_name = data_label;
+	  err = arrayh5_read(&a, fname, data_name, -1, 0);
+	  free(fname);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  CHECK(a.rank <= 5, "data cannot have more than 5 dimensions");
@@ -129,16 +163,24 @@ void output_v5d(char *v5d_fname, char *data_label,
 	  Nc = firstdim+1 >= a.rank ? 1 : a.dims[firstdim+1];
 	  Nl[0] = firstdim+2 >= a.rank ? 1 : a.dims[firstdim+2];
 
-	  if (!v5d_fname)
-	       v5d_fname = replace_suffix(h5_fnames[ifile], ".h5", ".v5d");
+	  if (!v5d_fname) {
+	       fname = split_fname(h5_fnames[ifile], &data_name);
+	       v5d_fname = replace_suffix(fname, ".h5", ".v5d");
+	       free(fname);
+	  }
 
 	  if (join && ifile == 0) {
 	       arrayh5_destroy(a); /* destroy while we check other datasets */
 
 	       /* loop to assign VarName[] and Nl[] arrays: */
 	       for (iv = 0; iv < NumVars; ++iv) {
-		    char *name =  replace_suffix(h5_fnames[iv], ".h5", "");
+		    char *name;
 		    int numTimes, nr, nc, fdim;
+
+		    fname = split_fname(h5_fnames[ifile], &data_name);
+		    name =  replace_suffix(fname, ".h5", 
+					   data_name[0] ? data_name - 1 : "");
+		    if (!data_name[0]) data_name = data_label;
 
 		    for (it = 0; it < 9 && name[it]; ++it)
 			 VarName[iv][it] = name[it];
@@ -148,8 +190,9 @@ void output_v5d(char *v5d_fname, char *data_label,
 		    /* we don't really have to read the whole array;
 		       if we called HDF5 routines directly, we could just
 		       get the dimensions...oh well */
-		    err = arrayh5_read(&a, h5_fnames[iv], data_label, -1, 0);
+		    err = arrayh5_read(&a, fname, data_name, -1, 0);
 		    CHECK(!err, arrayh5_read_strerror[err]);
+		    free(fname);
 		    
 		    numTimes = a.rank < 4 ? 1 : a.dims[a.rank - 4];
 		    fdim = a.rank <= 3 ? 0 : a.rank - 3;
@@ -163,8 +206,11 @@ void output_v5d(char *v5d_fname, char *data_label,
 	       }
 
 	       /* read first array back in */
-	       err = arrayh5_read(&a, h5_fnames[0], data_label, -1, 0);
+	       fname = split_fname(h5_fnames[ifile], &data_name);
+	       if (!data_name[0]) data_name = data_label;
+	       err = arrayh5_read(&a, fname, data_name, -1, 0);
 	       CHECK(!err, arrayh5_read_strerror[err]);
+	       free(fname);
 	  }
 	  else if (!join) {
 	       if (data_label) {

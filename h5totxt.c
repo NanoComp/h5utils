@@ -45,8 +45,37 @@ void usage(FILE *f)
 	     "    -y <iy> : take y=<iy> slice of data\n"
 	     "    -z <iz> : take z=<iz> slice of data [ default: z=0 ]\n"
 	     "         -T : transpose the data [default: no]\n"
-	     "  -d <name> : use dataset <name> in the input file (default: first dataset)\n"
+	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
+	     "           -- you can also specify a dataset via <filename>:<name>\n"
 	  );
+}
+
+/* given an fname of the form <filename>:<data_name>, return a pointer
+   to a newly-allocated string containing <filename>, and point data_name
+   to the position of <data_name> in fname.  The user must free() the
+   <filename> string. */
+static char *split_fname(char *fname, char **data_name)
+{
+     int fname_len;
+     char *colon, *filename;
+
+     fname_len = strlen(fname);
+     colon = strchr(fname, ':');
+     if (colon) {
+          int colon_len = strlen(colon);
+          filename = (char*) malloc(sizeof(char) * (fname_len-colon_len+1));
+          CHECK(filename, "out of memory");
+          strncpy(filename, fname, fname_len-colon_len+1);
+	  filename[fname_len-colon_len] = 0;
+          *data_name = colon + 1;
+     }
+     else { /* treat as if ":" were at the end of fname */
+          filename = (char*) malloc(sizeof(char) * (fname_len + 1));
+          CHECK(filename, "out of memory");
+          strcpy(filename, fname);
+          *data_name = fname + fname_len;
+     }
+     return filename;
 }
 
 int main(int argc, char **argv)
@@ -84,11 +113,11 @@ int main(int argc, char **argv)
 		   transpose = 1;
 		   break;
 	      case 'o':
-		   txt_fname = (char*) malloc(sizeof(char) *
-					      (strlen(optarg) + 1));
-		   CHECK(txt_fname, "out of memory");
-		   strcpy(txt_fname, optarg);
-		   break;
+                   txt_fname = (char*) malloc(sizeof(char) *
+                                              (strlen(optarg) + 1));
+                   CHECK(txt_fname, "out of memory");
+                   strcpy(txt_fname, optarg);
+                   break;
 	      case 's':
 		   free(sep);
 		   sep = (char*) malloc(sizeof(char) *
@@ -125,11 +154,16 @@ int main(int argc, char **argv)
      }
 
      for (ifile = optind; ifile < argc; ++ifile) {
+	  char *dname, *h5_fname;
+	  h5_fname = split_fname(argv[ifile], &dname);
+	  if (dname[0])
+	       data_name = dname;
+
 	  if (verbose)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
-		      argv[ifile], islice, slicedim + 'x');
+		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, argv[ifile], data_name, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, data_name, slicedim, islice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  
@@ -183,6 +217,7 @@ int main(int argc, char **argv)
 	  if (txt_fname)
 	       free(txt_fname);
 	  txt_fname = NULL;
+	  free(h5_fname);
      }
      free(sep);
 

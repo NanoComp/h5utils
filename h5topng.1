@@ -41,7 +41,7 @@ file can contain multiple data sets; by default,
 .I h5topng
 takes the first dataset, but this can be changed via the
 .B -d
-option.
+option, or by using the syntax \fIHDF5FILE:DATASET\fR.
 
 For a three-dimensional data set, the xy slice at z index zero is extracted
 by default, but other slices can be extracted using the
@@ -146,6 +146,8 @@ values that differ from
 Use dataset
 .I name
 from the input files; otherwise, the first dataset from each file is used.
+Alternatively, use the syntax \fIHDF5FILE:DATASET\fR, which allows you
+to specify a different dataset for each file.
 You can use the
 .I h5ls
 command (included with hdf5) to find the names of datasets within a file.

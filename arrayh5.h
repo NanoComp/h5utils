@@ -38,6 +38,7 @@ extern arrayh5 arrayh5_create(int rank, const int *dims);
 extern arrayh5 arrayh5_clone(arrayh5 a);
 extern void arrayh5_destroy(arrayh5 a);
 extern int arrayh5_conformant(arrayh5 a, arrayh5 b);
+extern void arrayh5_getrange(arrayh5 a, double *min, double *max);
 
 extern const char arrayh5_read_strerror[][100];
 extern int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,

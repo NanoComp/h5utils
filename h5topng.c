@@ -54,8 +54,37 @@ void usage(FILE *f)
 	     "   -M <max> : set top of color scale to data value <max>\n"
 	     "  -C <file> : superimpose contour outlines from <file>\n"
 	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
-	     "  -d <name> : use dataset <name> in the input file (default: first dataset)\n"
+	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
+	     "           -- you can also specify a dataset via <filename>:<name>\n"
 	  );
+}
+
+/* given an fname of the form <filename>:<data_name>, return a pointer
+   to a newly-allocated string containing <filename>, and point data_name
+   to the position of <data_name> in fname.  The user must free() the
+   <filename> string. */
+static char *split_fname(char *fname, char **data_name)
+{
+     int fname_len;
+     char *colon, *filename;
+
+     fname_len = strlen(fname);
+     colon = strchr(fname, ':');
+     if (colon) {
+          int colon_len = strlen(colon);
+          filename = (char*) malloc(sizeof(char) * (fname_len-colon_len+1));
+          CHECK(filename, "out of memory");
+          strncpy(filename, fname, fname_len-colon_len+1);
+	  filename[fname_len-colon_len] = 0;
+          *data_name = colon + 1;
+     }
+     else { /* treat as if ":" were at the end of fname */
+          filename = (char*) malloc(sizeof(char) * (fname_len + 1));
+          CHECK(filename, "out of memory");
+          strcpy(filename, fname);
+          *data_name = fname + fname_len;
+     }
+     return filename;
 }
 
 int main(int argc, char **argv)
@@ -64,7 +93,7 @@ int main(int argc, char **argv)
      char *png_fname = NULL, *contour_fname = NULL, *data_name = NULL;
      int *mask = NULL;
      double background_value = 1.0;
-     double min, max;
+     double min = 0, max = 0;
      int min_set = 0, max_set = 0;
      extern char *optarg;
      extern int optind;
@@ -182,11 +211,16 @@ int main(int argc, char **argv)
      }
      
      for (ifile = optind; ifile < argc; ++ifile) {
+          char *dname, *h5_fname;
+          h5_fname = split_fname(argv[ifile], &dname);
+          if (dname[0])
+               data_name = dname;
+
 	  if (verbose)
 	       printf("reading from \"%s\", slice at %d in %c dimension.\n",
-		      argv[ifile], islice, slicedim + 'x');
+		      h5_fname, islice, slicedim + 'x');
 	  
-	  err = arrayh5_read(&a, argv[ifile], data_name, slicedim, islice);
+	  err = arrayh5_read(&a, h5_fname, data_name, slicedim, islice);
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  
@@ -195,8 +229,8 @@ int main(int argc, char **argv)
 	  
 	  if (!png_fname) {
 	       png_fname = (char *) malloc(sizeof(char) * 
-					   (strlen(argv[ifile]) + 5));
-	       strcpy(png_fname, argv[ifile]);
+					   (strlen(h5_fname) + 5));
+	       strcpy(png_fname, h5_fname);
 	       
 	       /* remove ".h5" from filename: */
 	       if (strlen(png_fname) >= strlen(".h5") &&
@@ -237,6 +271,7 @@ int main(int argc, char **argv)
 
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
+	  free(h5_fname);
      }
      if (contour_fname)
 	  arrayh5_destroy(contour_data);

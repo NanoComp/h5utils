@@ -121,7 +121,6 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
      int err = 0, i;
      hsize_t rank, *dims_copy, *maxdims;
      int *dims;
-     void *data;
 
      CHECK(a, "NULL array passed to arrayh5_read");
      a->dims = NULL;
