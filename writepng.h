@@ -50,14 +50,14 @@ void writepng(char *filename,
 	      REAL *data, REAL *mask, REAL mask_thresh,
 	      REAL *overlay, colormap_t overlay_cmap,
 	      REAL minrange, REAL maxrange,
-	      colormap_t colormap);
+	      colormap_t colormap, int eight_bit);
 
 void writepng_autorange(char *filename,
 			int nx, int ny, int transpose,
 			REAL skew, REAL scalex, REAL scaley,
 			REAL *data, REAL *mask, REAL mask_thresh,
 			REAL *overlay, colormap_t overlay_cmap,
-			colormap_t colormap);
+			colormap_t colormap, int eight_bit);
 
 /***********************************************************************/
 

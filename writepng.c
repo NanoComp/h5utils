@@ -54,11 +54,12 @@ static void convert_row(int png_width, int data_width,
 			REAL *datarow, REAL *datarow2, REAL weightrow,
 			int stride, REAL *maskrow, REAL *maskrow2,
 			REAL mask_thresh, REAL *mask_prev, int init_mask_prev,
+			png_byte mask_byte,
 			int overlay, REAL *olayrow, REAL *olayrow2, 
 			colormap_t olay_cmap, REAL olaymin, REAL olaymax,
 			colormap_t cmap,
 			REAL minrange, REAL maxrange, REAL scale,
-			png_byte * row_pointer)
+			png_byte * row_pointer, int eight_bit)
 {
      int i;
 
@@ -69,12 +70,12 @@ static void convert_row(int png_width, int data_width,
 	  REAL val, maskval = 0.0, olayval = olaymin;
 
 	  if (n < 0 || n > data_width) {
-	       if (overlay)
+	       if (eight_bit)
+		    row_pointer[i] = 255;
+	       else
 		    row_pointer[3*i]
 			 = row_pointer[3*i + 1]
-			 = row_pointer[3*i + 2] = 0;
-	       else
-		    row_pointer[i] = 255;
+			 = row_pointer[3*i + 2] = mask_byte;
 	       continue;
 	  }
 	  
@@ -127,12 +128,12 @@ static void convert_row(int png_width, int data_width,
 	       }
 	       mask_prev[i] = maskval;
 	       if (maskmin <= mask_thresh && maskmax >= mask_thresh) {
-		    if (overlay)
+		    if (eight_bit)
+			 row_pointer[i] = 255;
+		    else
 			 row_pointer[3*i]
 			      = row_pointer[3*i + 1]
-			      = row_pointer[3*i + 2] = 0;
-		    else
-			 row_pointer[i] = 255;
+			      = row_pointer[3*i + 2] = mask_byte;
 		    continue;
 	       }
 	  }	 
@@ -142,7 +143,9 @@ static void convert_row(int png_width, int data_width,
 	  else if (val < minrange)
 	       val = minrange;
 	  
-	  if (overlay) {
+	  if (eight_bit) 
+	       row_pointer[i] = (val - minrange) * scale;
+	  else if (overlay) {
 	       float r, g, b, a, ro, go, bo, ao;
 	       cmap_lookup((val - minrange) / (maxrange - minrange),
 			   cmap, &r, &g, &b, &a);
@@ -155,14 +158,20 @@ static void convert_row(int png_width, int data_width,
 	       row_pointer[3*i + 1] = g * 255 + 0.5;
 	       row_pointer[3*i + 2] = b * 255 + 0.5;
 	  }
-	  else
-	       row_pointer[i] = (val - minrange) * scale;
+	  else {
+	       float r, g, b, a;
+	       cmap_lookup((val - minrange) / (maxrange - minrange),
+			   cmap, &r, &g, &b, &a);
+	       row_pointer[3*i    ] = r * 255 + 0.5;
+	       row_pointer[3*i + 1] = g * 255 + 0.5;
+	       row_pointer[3*i + 2] = b * 255 + 0.5;
+	  }
      }
 }
 
-static void init_palette(png_colorp palette, colormap_t colormap)
+static void init_palette(png_colorp palette, colormap_t colormap,
+			 png_byte mask_byte)
 {
-     const int mid = 0.5 * 254;
      int i;
 
      for (i = 0; i < 255; ++i) {
@@ -179,13 +188,7 @@ static void init_palette(png_colorp palette, colormap_t colormap)
      }
 
      /* set mask color: */
-     if (palette[mid].red/3. + palette[mid].green/3. + palette[mid].blue/3.
-	 > mid)
-	  /* black */
-	  palette[255].green = palette[255].blue = palette[255].red = 0; 
-     else
-	  /* white */
-	  palette[255].green = palette[255].blue = palette[255].red = 255; 
+     palette[255].green = palette[255].blue = palette[255].red = mask_byte; 
 }
 
 #define USE_ALPHA 0
@@ -224,7 +227,7 @@ void writepng(char *filename,
 	      REAL *mask, REAL mask_thresh,
 	      REAL *overlay, colormap_t overlay_cmap,
 	      REAL minrange, REAL maxrange,
-	      colormap_t colormap)
+	      colormap_t colormap, int eight_bit)
 {
      FILE *fp;
      png_structp png_ptr;
@@ -232,6 +235,11 @@ void writepng(char *filename,
      int height, width;
      double skewsin = sin(skew), skewcos = cos(skew);
      REAL minoverlay = 0, maxoverlay = 0;
+     png_byte mask_byte;
+
+     /* we must use direct color for translucent overlays */
+     if (overlay)
+	  eight_bit = 0;
 
      /* compute png size from scaled (and possibly transposed) data size,
       * and reverse the meaning of the scale factors; now they are what we 
@@ -258,6 +266,17 @@ void writepng(char *filename,
 	       if (maxoverlay < overlay[i])
 		    maxoverlay = overlay[i];
 	  }
+     }
+
+     /* determine mask color by middle of colormap (FIXME: use
+	median color of the data or some such thing instead?) */
+     {
+	  float r,g,b,a;
+	  cmap_lookup(0.5, colormap, &r, &g, &b, &a);
+	  if ((r + g + b) / 3.0 > 0.5)
+	       mask_byte = 0; /* black */
+	  else
+	       mask_byte = 255; /* white */
      }
 
      fp = fopen(filename, "wb");
@@ -305,7 +324,7 @@ void writepng(char *filename,
        compression_type and filter_type MUST currently be
        PNG_COMPRESSION_TYPE_BASE and PNG_FILTER_TYPE_BASE. REQUIRED */
 
-     if (overlay) /* need RBG color for overlay mixing */
+     if (!eight_bit)
 	  png_set_IHDR(png_ptr, info_ptr, width, height, 8 /* bit_depth */ ,
 		       PNG_COLOR_TYPE_RGB,
 		       PNG_INTERLACE_NONE,
@@ -326,7 +345,7 @@ void writepng(char *filename,
 
 	  /* set the palette if there is one.  REQUIRED for indexed-color
 	   * images */
-	  init_palette(palette, colormap);
+	  init_palette(palette, colormap, mask_byte);
 	  png_set_PLTE(png_ptr, info_ptr, palette, 256);
      }
 
@@ -347,7 +366,7 @@ void writepng(char *filename,
 	       scale = 0.0;
 
 	  row_pointer = (png_byte *) malloc(width * sizeof(png_byte) *
-					    (overlay ? 3 : 1));
+					    (eight_bit ? 1 : 3));
 	  if (row_pointer == NULL) {
 	       fclose(fp);
 	       return;
@@ -379,11 +398,12 @@ void writepng(char *filename,
 				mask ? mask + n : NULL,
 				mask ? mask + n3 : NULL,
 				mask_thresh, mask_prev, row == 0,
+				mask_byte,
 				overlay != 0,
 				overlay + n, overlay + n2,
 				overlay_cmap, minoverlay, maxoverlay,
 				colormap, minrange, maxrange, scale,
-				row_pointer);
+				row_pointer, eight_bit);
 	       else
 		    convert_row(width, data_width, scaley, offset,
 				data + n * data_width, data + n2 * data_width,
@@ -392,11 +412,12 @@ void writepng(char *filename,
 				mask ? mask + n * data_width : NULL,
 				mask ? mask + n3 * data_width : NULL,
 				mask_thresh, mask_prev, row == 0,
+				mask_byte,
 				overlay != 0,
 				overlay + n*data_width, overlay+n2*data_width,
 				overlay_cmap, minoverlay, maxoverlay,
 				colormap, minrange, maxrange, scale,
-				row_pointer);
+				row_pointer, eight_bit);
 	       png_write_rows(png_ptr, &row_pointer, 1);
 	  }
 
@@ -439,7 +460,7 @@ void writepng_autorange(char *filename,
 			REAL * data,
 			REAL *mask, REAL mask_thresh,
 			REAL *overlay, colormap_t overlay_cmap,
-			colormap_t colormap)
+			colormap_t colormap, int eight_bit)
 {
      static REAL range = 0.0;
      REAL sum = 0, newrange, max = -1.0;
@@ -466,5 +487,5 @@ void writepng_autorange(char *filename,
      }
      writepng(filename, nx, ny, transpose, skew, scalex, scaley,
 	      data, mask, mask_thresh, overlay, overlay_cmap,
-	      -range, range, colormap);
+	      -range, range, colormap, eight_bit);
 }

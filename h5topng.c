@@ -67,9 +67,10 @@ void usage(FILE *f)
 	     "   -M <max> : set top of color scale to data value <max>\n"
 	     "         -R : use uniform colormap range for all files\n"
 	     "  -C <file> : superimpose contour outlines from <file>\n"
+	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
 	     "  -A <file> : overlay data from <file>, as specified by -y\n"
 "  -a <c>:<o>: overlay colormap <c>, opacity <o> (0-1) [default: %s:%g]\n"
-	     "   -b <val> : contours around values != <val> [default: 1.0]\n"
+"         -8 : use an 8-bit color table, instead of 24-bit direct color\n"
 	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
 	     "              -- you can also specify a dataset via <filename>:<name>\n",
 	  OVERLAY_CMAP_DEFAULT, OVERLAY_OPACITY_DEFAULT);
@@ -232,12 +233,13 @@ int main(int argc, char **argv)
      double scalex = 1.0, scaley = 1.0;
      int invert = 0;
      double skew = 0.0;
+     int eight_bit = 0;
      int ifile;
 
      colormap = my_strdup(CMAP_DEFAULT);
      overlay_colormap = my_strdup(OVERLAY_CMAP_DEFAULT);
 
-     while ((c = getopt(argc, argv, "ho:x:y:z:0c:m:M:RC:b:d:vX:Y:S:TrZs:Va:A:")) != -1)
+     while ((c = getopt(argc, argv, "ho:x:y:z:0c:m:M:RC:b:d:vX:Y:S:TrZs:Va:A:8")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -254,6 +256,9 @@ int main(int argc, char **argv)
 		   break;
 	      case 'r':
 		   invert = 1;
+		   break;
+	      case '8':
+		   eight_bit = 1;
 		   break;
 	      case 'Z':
 		   zero_center = 1;
@@ -341,8 +346,9 @@ int main(int argc, char **argv)
 	  }
 
      cmap = get_cmap(colormap, invert, 1.0, verbose);
-     overlay_cmap = get_cmap(overlay_colormap, overlay_invert,
-			     overlay_opacity, verbose);
+     if (overlay_fname)
+	  overlay_cmap = get_cmap(overlay_colormap, overlay_invert,
+				  overlay_opacity, verbose);
 
      if (optind == argc) {  /* no parameters left */
 	  usage(stderr);
@@ -470,7 +476,7 @@ int main(int argc, char **argv)
 			scaley, scalex, a.data, 
 			contour_fname ? contour_data.data : NULL, mask_thresh,
 			overlay_fname ? overlay_data.data : NULL,overlay_cmap, 
-			min, max, cmap);
+			min, max, cmap, eight_bit);
 	  }
 	  arrayh5_destroy(a);
 	  free(png_fname); png_fname = NULL;
