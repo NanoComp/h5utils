@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 	  int cnx, cny;
 	  char *fname, *dname;
 
-	  fname = split_fname(contour_fname, dname);
+	  fname = split_fname(contour_fname, &dname);
 	  if (!dname[0])
 	       dname = NULL;
 
