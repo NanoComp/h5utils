@@ -55,6 +55,7 @@ void usage(FILE *f)
 	     "  -s <skew> : skew axes by <skew> degrees [ default: 0 ]\n"
 	     "         -T : transpose the data [default: no]\n"
 	     "  -c <cmap> : use colormap <cmap> [default: " CMAP_DEFAULT "]\n"
+	     "              (see " CMAP_DIR " for other colormaps)\n"
 	     "         -r : reverse color map [default: no]\n"
 	     "         -Z : center color scale at zero [default: no]\n"
 	     "   -m <min> : set bottom of color scale to data value <min>\n"
