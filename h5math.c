@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 	  if (data_name)
 	       out_dname = data_name;
 	  else
-	       out_dname = default_data_name;
+	       out_dname = (char *) default_data_name;
      }
      optind++;
 
@@ -274,8 +274,10 @@ int main(int argc, char **argv)
      
      if (verbose) {
 	  char *buf = (char*) malloc(sizeof(char) * 
-				     evaluator_calculate_length(evaluator));
+				     (1 + 
+				      evaluator_calculate_length(evaluator)));
 	  CHECK(buf, "out of memory");
+	  evaluator_write(evaluator, buf);
 	  printf("Evaluating expression: %s\n", buf);
 	  free(buf);
      }
