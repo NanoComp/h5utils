@@ -1,3 +1,9 @@
+h5utils 1.9 (mm/dd/yy)
+
+  * Added new h5math utility, which creates and combines HDF5 datasets
+    using a user-specified mathematical expression.  (Requires GNU
+    libmatheval to be installed.)
+
 h5utils 1.8 (5/22/04)
 
   * New -A and -a options for h5topng to allow translucent overlays
