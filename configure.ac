@@ -74,29 +74,38 @@ fi
 ###########################################################################
 
 # Only build h5fromh4 if we are using a version of HDF5 prior to 1.4, and
-# thus don't have the superior h4toh5 utility.
+# thus don't have the superior h4toh5 utility.  Similarly for h5toh4.
 AC_CHECK_PROG(H4TOH5, h4toh5, h4toh5)
+AC_CHECK_PROG(H5TOH4, h5toh4, h5toh4)
 
-AC_ARG_WITH(h5fromh4,
-	[AC_HELP_STRING([--without-h5fromh4], [don't compile h5fromh4])],
+AC_ARG_WITH(hdf4,
+	[AC_HELP_STRING([--with-hdf4], [build hdf4 utils even if h4toh5 and h5toh4 are present])],
 	ok=$withval, ok=maybe)
 if test "x$ok" = xyes; then
 	H4TOH5=""
+	H5TOH4=""
 elif test "x$ok" = xno; then
 	H4TOH5="h4toh5"
+	H5TOH4="h5toh4"
 fi
 
-H5FROMH4=no
-if test "x$H4TOH5" != xh4toh5; then
+HDF4=no
+if test "x$H4TOH5" != xh4toh5 -o "x$H5TOH4" != xh5toh4; then
 	AC_CHECK_LIB(jpeg, jpeg_start_compress,
 		[AC_CHECK_LIB(df, DFSDgetdata,
-			[H4_LIBS="-ldf -ljpeg"; H5FROMH4=yes],
-			[AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4])], -ljpeg)],
-		[AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4])])
+			[H4_LIBS="-ldf -ljpeg"; HDF4=yes],
+			[AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4 or h4fromh5])], -ljpeg)],
+		[AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4 or h4fromh5])])
 
-	if test $H5FROMH4 = yes; then
-		MORE_H5UTILS="h5fromh4 $MORE_H5UTILS"
-		MORE_H5UTILS_MANS="h5fromh4.1 $MORE_H5UTILS_MANS"
+	if test $HDF4 = yes; then
+		if test "x$H4TOH5" != xh4toh5; then
+		   MORE_H5UTILS="h5fromh4 $MORE_H5UTILS"
+		   MORE_H5UTILS_MANS="h5fromh4.1 $MORE_H5UTILS_MANS"
+		fi
+		if test "x$H5TOH4" != xh5toh4; then
+		   MORE_H5UTILS="h4fromh5 $MORE_H5UTILS"
+		   # MORE_H5UTILS_MANS="h4fromh5.1 $MORE_H5UTILS_MANS"
+		fi
 	fi
 fi
 AC_CHECK_HEADERS(hdf.h hdf/hdf.h)

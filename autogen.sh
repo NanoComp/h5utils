@@ -18,4 +18,4 @@ autoreconf --verbose --install --symlink --force
 autoreconf --verbose --install --symlink --force
 autoreconf --verbose --install --symlink --force
 
-./configure --with-h5fromh4 --enable-maintainer-mode $configure_args
+./configure --with-hdf4 --enable-maintainer-mode $configure_args
