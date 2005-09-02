@@ -1,3 +1,11 @@
+h5utils 1.10 (9/2/05)
+
+  * Added h4fromh5 utility.  (NCSA seems to be no longer shipping
+    the HDF5/HDF4 conversion tools with the latest HDF5 release.)
+
+  * Added dkbluered color map, which is similar to bluered but
+    uses a somewhat wider range of colors.
+
 h5utils 1.9.1 (8/5/04)
 
   * Fix h5topng compilation failure with some non-C99 compilers;
