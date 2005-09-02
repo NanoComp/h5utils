@@ -41,6 +41,7 @@ void usage(FILE *f)
 	     "         -h : this help message\n"
              "         -V : print version number and copyright\n"
 	     "         -v : verbose output\n"
+	     "         -T : transposed output\n"
 	     "  -o <file> : output to HDF4 file <file>\n"
 	     "  -d <name> : use dataset <name> in the input file\n"
 	     "              -- you can also specify a dataset via <file>:<name>\n"
@@ -55,9 +56,9 @@ int main(int argc, char **argv)
      extern int optind;
      int c;
      int ifile;
-     int verbose = 0;
+     int verbose = 0, transpose = 0;
 
-     while ((c = getopt(argc, argv, "hd:vo:V")) != -1)
+     while ((c = getopt(argc, argv, "hd:vTo:V")) != -1)
 	  switch (c) {
 	      case 'h':
 		   usage(stdout);
@@ -68,6 +69,9 @@ int main(int argc, char **argv)
 		   return EXIT_SUCCESS;
 	      case 'v':
 		   verbose = 1;
+		   break;
+	      case 'T':
+		   transpose = 1;
 		   break;
 	      case 'd':
 		   free(data_name);
@@ -111,6 +115,9 @@ int main(int argc, char **argv)
 	       printf("Reading HDF5 input file \"%s\"...\n", h5_fname);
 	  err = arrayh5_read(&a, h5_fname, dname, NULL, 0, 0, 0, 0);
 	  CHECK(!err, arrayh5_read_strerror[err]);
+
+	  if (transpose)
+	       arrayh5_transpose(&a);
 
 	  CHECK(a.rank <= ARRAYH4_MAX_RANK, "HDF5 rank is too big");
 	  for (i = 0; i < a.rank; ++i)
