@@ -1,3 +1,8 @@
+h5utils 1.10.1 (9/20/06)
+
+  * Fixed build problem on Cygwin due to missing ".exe" extension. 
+    Thanks to Ken Hill for the bug report.
+
 h5utils 1.10 (9/2/05)
 
   * Added h4fromh5 utility.  (NCSA seems to be no longer shipping

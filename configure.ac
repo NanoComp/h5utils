@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.10, stevenj@alum.mit.edu)
+AC_INIT(h5utils, 1.10.1, stevenj@alum.mit.edu)
 AM_INIT_AUTOMAKE(1.6)
 AC_CONFIG_SRCDIR([h5topng.c])
 AM_CONFIG_HEADER(config.h)
