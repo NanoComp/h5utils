@@ -94,8 +94,8 @@ static void write_vtk_header(FILE *f, int is_binary,
 	     "ORIGIN %g %g %g\n"
 	     "SPACING %g %g %g\n",
 	     is_binary ? "BINARY" : "ASCII",
-	     nz, ny, nx,
-	     oz, oy, ox, sz, sy, sx);
+	     nx, ny, nz,
+	     ox, oy, oz, sx, sy, sz);
 }
 
 static void write_vtk_value(FILE *f, double v, int store_bytes, int fix_bytes,
@@ -302,7 +302,7 @@ int main(int argc, char **argv)
 	  
 	  if (!combine) {
 	       FILE *f;
-	       int i, N = nx * ny * nz;
+	       int ix, iy, iz, N = nx * ny * nz;
 
 	       if (verbose)
 		    printf("writing \"%s\" from %dx%dx%d input data.\n",
@@ -323,9 +323,13 @@ int main(int argc, char **argv)
 		       "LOOKUP_TABLE default\n",
 		       N, found_dname, vtk_datatype[store_bytes]);
 	       
-	       for (i = 0; i < N; ++i)
+	       for (iz = 0; iz < nz; ++iz)
+	       for (iy = 0; iy < ny; ++iy)
+	       for (ix = 0; ix < nx; ++ix) {
+		    int i = (ix*ny + iy)*nz + iz;
 		    write_vtk_value(f, a[ia].data[i], store_bytes,
 				    fix_byte_order, min, max, invert);
+	       }
 	  
 	       if (f != stdout)
 		    fclose(f);
@@ -338,7 +342,7 @@ int main(int argc, char **argv)
 
      if (combine) {
 	  FILE *f;
-	  int i, N = nx * ny * nz;
+	  int ix, iy, iz, N = nx * ny * nz;
 
 	  if (verbose)
 	       printf("writing \"%s\" from %dx%dx%d input data.\n",
@@ -368,8 +372,10 @@ int main(int argc, char **argv)
 			   na, N, vtk_datatype[store_bytes]);
 	  }
 	  
-	  for (i = 0; i < N; ++i) {
-	       int ia;
+	  for (iz = 0; iz < nz; ++iz)
+	  for (iy = 0; iy < ny; ++iy)
+	  for (ix = 0; ix < nx; ++ix) {
+               int ia, i = (ix*ny + iy)*nz + iz;
 	       for (ia = 0; ia < na; ++ia)
 		    write_vtk_value(f, a[ia].data[i], store_bytes, 
 				    fix_byte_order, min, max, invert);
