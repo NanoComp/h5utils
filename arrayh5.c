@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* don't use new HDF5 1.8 API (which isn't even fully documented yet, grrr) */
+#define H5_USE_16_API 1
+
 #include <hdf5.h>
 
 #include "arrayh5.h"
