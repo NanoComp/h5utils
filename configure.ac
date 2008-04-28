@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.11, stevenj@alum.mit.edu)
+AC_INIT(h5utils, 1.11.1, stevenj@alum.mit.edu)
 AM_INIT_AUTOMAKE(1.6)
 AC_CONFIG_SRCDIR([h5topng.c])
 AM_CONFIG_HEADER(config.h)
@@ -216,6 +216,7 @@ fi
 save_prefix=$prefix
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
 eval datadir_val=$datadir
+eval datadir_val=$datadir_val
 prefix=$save_prefix
 
 AC_DEFINE_UNQUOTED(DATADIR, "$datadir_val", [datadir installation prefix])
