@@ -133,7 +133,10 @@ else
 	# try to find installation directory
 	AC_CHECK_PROGS(OCTAVE, octave, echo)
 	AC_MSG_CHECKING(where octave plugins go)
-	OCT_INSTALL_DIR=`echo "DEFAULT_LOADPATH" | $OCTAVE -q | tr ':' '\n' | grep "site/oct" | head -1`
+	OCT_INSTALL_DIR=`echo "path" | $OCTAVE -q 2> /dev/null | grep "/oct/" | head -1`
+	if test -z "$OCT_INSTALL_DIR"; then
+		OCT_INSTALL_DIR=`echo "DEFAULT_LOADPATH" | $OCTAVE -q 2> /dev/null | tr ':' '\n' | grep "site/oct" | head -1`
+        fi
 	if test -n "$OCT_INSTALL_DIR"; then
 		AC_MSG_RESULT($OCT_INSTALL_DIR)
 		H5READ=h5read.oct
