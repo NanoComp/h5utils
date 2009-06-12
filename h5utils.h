@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2002 Massachusetts Institute of Technology
+/* Copyright (c) 1999-2009 Massachusetts Institute of Technology
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
