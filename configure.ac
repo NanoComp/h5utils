@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.11.1, stevenj@alum.mit.edu)
+AC_INIT(h5utils, 1.11.2, stevenj@alum.mit.edu)
 AM_INIT_AUTOMAKE(1.6)
 AC_CONFIG_SRCDIR([h5topng.c])
 AM_CONFIG_HEADER(config.h)
@@ -183,26 +183,28 @@ AC_SUBST(V5D_INCLUDES)
 
 ###########################################################################
 
-AC_CHECK_HEADERS([netinet/in.h])
+AC_CHECK_HEADERS([arpa/inet.h netinet/in.h stdint.h inttypes.h])
+AC_CHECK_TYPES([uint16_t, uint32_t])
 
 AC_MSG_CHECKING([for htons])
-AC_TRY_LINK([#ifdef HAVE_NETINET_IN_H
+AC_TRY_LINK([#if defined(HAVE_ARPA_INET_H)
+#include <arpa/inet.h>
+#elif defined(HAVE_NETINET_IN_H)
 #include <netinet/in.h>
 #endif], [unsigned short i; htons(i);], [htons=yes
 	AC_DEFINE([HAVE_HTONS],1,[Define if you have htons.])], htons=no)
 AC_MSG_RESULT($htons)
 
-AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(float)
 
-if test "x$ac_cv_sizeof_unsigned_long" = "x$ac_cv_sizeof_float"; then
-	AC_MSG_CHECKING([for htonl])
-	AC_TRY_LINK([#ifdef HAVE_NETINET_IN_H
+AC_MSG_CHECKING([for htonl])
+AC_TRY_LINK([#if defined(HAVE_ARPA_INET_H)
+#include <arpa/inet.h>
+#elif defined(HAVE_NETINET_IN_H)
 #include <netinet/in.h>
-#endif], [unsigned short i; htonl(i);], [htonl=yes
-	     AC_DEFINE([HAVE_HTONL],1,[Define if you have htonl.])], htonl=no)
-	AC_MSG_RESULT($htonl)
-fi
+#endif], [unsigned long i; htonl(i);], [htonl=yes
+     AC_DEFINE([HAVE_HTONL],1,[Define if you have htonl.])], htonl=no)
+AC_MSG_RESULT($htonl)
 
 if test "x$htons" != xyes -o "x$htonl" != xyes; then
 	AC_C_BIGENDIAN

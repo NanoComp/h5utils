@@ -1,3 +1,7 @@
+h5utils 1.11.2 (6/12/09)
+
+  * Fixed failure in h5tovtk -2; thanks to Karen Lee for the bug report.
+
 h5utils 1.11.1 (4/28/08)
 
   * Fixed failure to find colormap files in h5topng 1.11 (due

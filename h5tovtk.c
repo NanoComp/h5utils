@@ -28,14 +28,35 @@
 
 #include <unistd.h>
 
-#ifdef HAVE_NETINET_IN_H
+#include "config.h"
+
+#ifdef HAVE_STDINT_H
+#  include <stdint.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+#  include <inttypes.h>
+#endif
+
+#if defined(HAVE_ARPA_INET_H)
+#  include <arpa/inet.h>
+#elif defined(HAVE_NETINET_IN_H) 
 #  include <netinet/in.h>
 #endif
 
-#include "config.h"
 #include "arrayh5.h"
 #include "copyright.h"
 #include "h5utils.h"
+
+#ifdef HAVE_UINT16_T
+typedef uint16_t my_uint16_t;
+#else
+typedef unsigned short my_uint16_t;
+#endif
+#ifdef HAVE_UINT32_T
+typedef uint32_t my_uint32_t;
+#else
+typedef unsigned long my_uint32_t;
+#endif
 
 #define CHECK(cond, msg) { if (!(cond)) { fprintf(stderr, "h5tovtk error: %s\n", msg); exit(EXIT_FAILURE); } }
 
@@ -116,7 +137,7 @@ static void write_vtk_value(FILE *f, double v, int store_bytes, int fix_bytes,
 	 }
 	 case 2:
 	 {
-	      unsigned short i;
+	      my_uint16_t i;
 	      i = floor((v - min) * 65535.0 / (max - min) + 0.5);
 	      if (fix_bytes) {
 #if defined(HAVE_HTONS)
@@ -134,8 +155,8 @@ static void write_vtk_value(FILE *f, double v, int store_bytes, int fix_bytes,
 	 {
 	      float fv = v;
 	      if (fix_bytes) {
-#if defined(HAVE_HTONL) && (SIZEOF_FLOAT == SIZEOF_UNSIGNED_LONG)
-		   unsigned long *i = (unsigned long *) &fv;
+#if defined(HAVE_HTONL) && (SIZEOF_FLOAT == 4)
+		   my_uint32_t *i = (my_uint32_t *) &fv;
 		   *i = htonl(*i);
 #elif ! defined(WORDS_BIGENDIAN)
 		   unsigned char swap, *bytes;
@@ -247,8 +268,10 @@ int main(int argc, char **argv)
 
      CHECK(store_bytes != 4 || sizeof(float) == 4, 
 	   "'float' is wrong size for -4");
-     CHECK(store_bytes != 2 || sizeof(unsigned short) == 4, 
-	   "'short' is wrong size for -2");
+     CHECK(store_bytes != 4 || sizeof(my_uint32_t) == 4, 
+	   "missing 4-byte integer type for -4");
+     CHECK(store_bytes != 2 || sizeof(my_uint16_t) == 2, 
+	   "missing 2-byte integer type for -2");
      
      a = (arrayh5*) malloc(sizeof(arrayh5) * (na = argc - optind));
      CHECK(a, "out of memory");
