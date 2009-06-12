@@ -383,7 +383,7 @@ void writepng(char *filename,
 		    return;
 	       }
 	  }
-	  for (row = 0; row < height; ++row) {
+	  for (row = height-1; row >= 0; --row) {
 	       REAL x = row * scalex;
 	       int n = PIN(0,(int) (x + 0.5), data_height-1);
 	       double delta = x - n;
@@ -401,7 +401,7 @@ void writepng(char *filename,
 				data_height, 
 				mask ? mask + (n%mny) : NULL,
 				mask ? mask + (n3%mny) : NULL,
-				mask_thresh, mask_prev, row == 0,
+				mask_thresh, mask_prev, row == height-1,
 				mask_byte, mnx, mny,
 				overlay != 0,
 				overlay + (n%ony), overlay + (n2%ony),
@@ -415,7 +415,7 @@ void writepng(char *filename,
 				1, 
 				mask ? mask + (n%mnx) * mny : NULL,
 				mask ? mask + (n3%mnx) * mny : NULL,
-				mask_thresh, mask_prev, row == 0,
+				mask_thresh, mask_prev, row == height-1,
 				mask_byte, mny, 1,
 				overlay != 0,
 				overlay + (n%onx) * ony,

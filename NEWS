@@ -1,4 +1,9 @@
-h5utils 1.11.2 (6/12/09)
+h5utils 1.12 (6/12/09)
+
+  * The vertical axis in h5topng is now reversed to correspond to
+    what most people seem to expect: increasing coordinates correspond
+    to "up" and "right" in the image, rather than "down" and "right"
+    in the image as in previous versions.
 
   * Fixed failure in h5tovtk -2; thanks to Karen Lee for the bug report.
 
