@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.12, stevenj@alum.mit.edu)
+AC_INIT(h5utils, 1.12.1, stevenj@alum.mit.edu)
 AM_INIT_AUTOMAKE(1.6)
 AC_CONFIG_SRCDIR([h5topng.c])
 AM_CONFIG_HEADER(config.h)
@@ -132,8 +132,15 @@ if test "$MKOCTFILE" = "echo"; then
 else
 	# try to find installation directory
 	AC_CHECK_PROGS(OCTAVE, octave, echo)
+	AC_CHECK_PROGS(OCTAVE_CONFIG, octave-config, echo)
 	AC_MSG_CHECKING(where octave plugins go)
-	OCT_INSTALL_DIR=`echo "path" | $OCTAVE -q 2> /dev/null | grep "/oct/" | head -1`
+	OCT_INSTALL_DIR=`octave-config --oct-site-dir 2> /dev/null | grep '/'`
+	if test -z "$OCT_INSTALL_DIR"; then
+		OCT_INSTALL_DIR=`octave-config --print OCTFILEDIR 2> /dev/null | grep '/'`
+	fi
+	if test -z "$OCT_INSTALL_DIR"; then
+		OCT_INSTALL_DIR=`echo "path" | $OCTAVE -q 2> /dev/null | grep "/oct/" | head -1`
+	fi
 	if test -z "$OCT_INSTALL_DIR"; then
 		OCT_INSTALL_DIR=`echo "DEFAULT_LOADPATH" | $OCTAVE -q 2> /dev/null | tr ':' '\n' | grep "site/oct" | head -1`
         fi
