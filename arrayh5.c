@@ -78,7 +78,9 @@ arrayh5 arrayh5_create(int rank, const int *dims)
 
 arrayh5 arrayh5_clone(arrayh5 a)
 {
-     return arrayh5_create(a.rank, a.dims);
+     arrayh5 b = arrayh5_create(a.rank, a.dims);
+     if (a.data) memcpy(b.data, a.data, sizeof(double) * a.N);
+     return b;
 }
 
 void arrayh5_destroy(arrayh5 a)

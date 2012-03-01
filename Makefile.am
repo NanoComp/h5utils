@@ -9,7 +9,7 @@ EXTRA_MANS = h5topng.1.in h5tov5d.1 h5fromh4.1 h5math.1
 EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS) $(EXTRA_MANS)
 
 noinst_PROGRAMS = h5fromitxt # quick hack, not really supported
-bin_PROGRAMS = h5totxt h5fromtxt h5tovtk @MORE_H5UTILS@
+bin_PROGRAMS = h5totxt h5fromtxt h5tovtk h5cyl2cart @MORE_H5UTILS@
 EXTRA_PROGRAMS = h5topng h5tov5d h5fromh4 h4fromh5 h5math
 
 dist_man_MANS = h5totxt.1 h5fromtxt.1 h5tovtk.1 @MORE_H5UTILS_MANS@
@@ -37,6 +37,8 @@ h4fromh5_LDADD = @H4_LIBS@
 
 h5math_SOURCES = h5math.c $(COMMON_SRC)
 h5math_LDADD = -lmatheval
+
+h5cyl2cart_SOURCES = h5cyl2cart.c $(COMMON_SRC)
 
 octdir = @OCT_INSTALL_DIR@
 oct_DATA = @H5READ@
