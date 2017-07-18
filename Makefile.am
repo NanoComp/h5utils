@@ -9,8 +9,8 @@ colormaps/viridis colormaps/inferno colormaps/RdBu colormaps/BrBG
 EXTRA_MANS = doc/man/h5topng.1.in doc/man/h5tov5d.1 doc/man/h5fromh4.1 doc/man/h5math.1
 EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS) $(EXTRA_MANS)
 
-noinst_PROGRAMS = h5fromitxt # quick hack, not really supported
-bin_PROGRAMS = h5totxt h5fromtxt h5tovtk h5cyl2cart @MORE_H5UTILS@
+noinst_PROGRAMS = h5cyl2cart # not documented/supported yet
+bin_PROGRAMS = h5totxt h5fromtxt h5tovtk @MORE_H5UTILS@
 EXTRA_PROGRAMS = h5topng h5tov5d h5fromh4 h4fromh5 h5math
 
 dist_man_MANS = doc/man/h5totxt.1 doc/man/h5fromtxt.1 doc/man/h5tovtk.1 @MORE_H5UTILS_MANS@
@@ -20,7 +20,6 @@ COMMON_SRC = arrayh5.c arrayh5.h h5utils.c h5utils.h
 
 h5totxt_SOURCES = h5totxt.c $(COMMON_SRC)
 h5fromtxt_SOURCES = h5fromtxt.c $(COMMON_SRC)
-h5fromitxt_SOURCES = h5fromitxt.c $(COMMON_SRC)
 h5tovtk_SOURCES = h5tovtk.c $(COMMON_SRC)
 
 h5topng_SOURCES = h5topng.c writepng.c writepng.h $(COMMON_SRC)
