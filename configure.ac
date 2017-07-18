@@ -56,7 +56,7 @@ fi
 
 if test $H5TOPNG = yes; then
 	MORE_H5UTILS="h5topng\$(EXEEXT) $MORE_H5UTILS"
-	H5TOPNG_MAN=h5topng.1
+	H5TOPNG_MAN=doc/man/h5topng.1
 fi
 
 AC_SUBST(H5TOPNG_MAN)
@@ -240,5 +240,5 @@ AC_SUBST(MORE_H5UTILS)
 AC_SUBST(MORE_H5UTILS_MANS)
 ###########################################################################
 
-AC_CONFIG_FILES([Makefile h5topng.1])
+AC_CONFIG_FILES([Makefile doc/man/h5topng.1])
 AC_OUTPUT
