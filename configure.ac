@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.12.1, stevenj@alum.mit.edu)
+AC_INIT(h5utils, 1.13, stevenj@alum.mit.edu)
 AM_INIT_AUTOMAKE([foreign silent-rules 1.6])
 AM_SILENT_RULES(yes)
 AC_CONFIG_SRCDIR([h5topng.c])

@@ -1,5 +1,14 @@
 Here, we describe what has changed between releases of the [h5utils](README.md) package.
 
+## h5utils-1.13 ##
+
+*7/18/17*
+
+* Fixed `h5topng` compilation for modern libpng versions.  Thanks to
+  Daisuke Fujimura (@fd00 on github) for posting patches.
+
+* Moved hosting to Github and translated documentation to Markdown.
+
 ## h5utils 1.12.1 ##
 
 *6/24/09*

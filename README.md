@@ -10,9 +10,9 @@ This package is developed by [Steven G. Johnson](http://math.mit.edu/~stevenj/),
 
 # Download and Install
 
-The latest version is h5utils 1.12.1, which can be downloaded in source-code form at:
+The latest version is h5utils 1.13, which can be downloaded in source-code form at:
 
-* http://ab-initio.mit.edu/h5utils/h5utils-1.12.1.tar.gz
+* http://ab-initio.mit.edu/h5utils/h5utils-1.13.tar.gz
 
 What's new in each version is described in the [release notes](NEWS.md) file.
 
