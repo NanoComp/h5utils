@@ -11,7 +11,7 @@ The color scales that I would tend to recommend are the following five, taken fr
  - red-white-blue colormap, good for signed data in conjunction with `-Z` option to make white=0
 * `inferno`: ![inferno](images/inferno.png)
   - a black-purple-red-orange-yellow colormap, a good replacement for the old `hot` colormap
- * `BrBg`: ![RdBu](images/RdBu.png)
+ * `BrBg`: ![BrBg](images/BrBg.png)
   - brown-white-aquamarine colormap, an alternative to `RdBu` for signed data, also best used in conjunction with the `-Z` option to make white=0
 
 These two are also sometimes useful:
