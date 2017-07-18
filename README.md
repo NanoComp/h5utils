@@ -32,6 +32,8 @@ make install
 ```
 See `./configure --help` for more options. You can use `make uninstall` to get rid of all the installed files.
 
+**Github**: If you are using the source [on github](https://github.com/stevengj/h5utils) (via `git clone https://github.com/stevengj/h5utils`), then you will also need to have [GNU autoconf, automake, and libtool](https://en.wikipedia.org/wiki/GNU_Build_System) installed, and run `sh autoconf.sh` (in a Unix shell) to set up things before running `make` above.
+
 **Note:** if you get a message like `cannot compute sizeof (unsigned long)` when running `./configure`, it probably means you didn't install the HDF5 library properly: you need to tell the runtime linker where to find it. On GNU/Linux, make sure there is a line `/usr/local/lib` in `/etc/ld.so.conf` and run `/sbin/ldconfig` (assuming you installed HDF5 in the default location).
 
 *Note:* if you installed the [MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface) (parallel) version of HDF5, you may get an error like `/usr/include/H5public.h:53:20: error: mpi.h: No such file or directory`.  This can be fixed by telling the compiler where to find the MPI header files, e.g. via: `./configure CC=mpicc`.
