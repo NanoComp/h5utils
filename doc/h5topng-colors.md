@@ -4,7 +4,7 @@ The `h5topng` utility program contains a number of built-in color tables that yo
 
 (My own favorites for a long time were `bluered` and `dkbluered` for signed data, and `gray` or `hot` for unsigned/nonnegative data.)
 
-## Color tables ==
+## Color tables
 The color scales that I most commonly use are the following five:
 
 * `gray`:  ![gray](images/Gray_colormap.png)
