@@ -4,7 +4,7 @@ colormaps/gray colormaps/green colormaps/hot colormaps/hsv		\
 colormaps/jet colormaps/lines colormaps/pink colormaps/prism		\
 colormaps/spring colormaps/summer colormaps/vga colormaps/winter	\
 colormaps/yarg colormaps/yellow colormaps/dkbluered \
-colormaps/viridis colormaps/inferno colormaps/coolwarm colormaps/RdBu colormaps/BrBG
+colormaps/viridis colormaps/inferno colormaps/RdBu colormaps/BrBG
 
 EXTRA_MANS = h5topng.1.in h5tov5d.1 h5fromh4.1 h5math.1
 EXTRA_DIST = h5read.cc copyright.h $(COLORMAPS) $(EXTRA_MANS)
