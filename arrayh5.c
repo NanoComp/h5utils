@@ -7,10 +7,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -54,7 +54,7 @@ arrayh5 arrayh5_create_withdata(int rank, const int *dims, double *data)
 
      CHECK(rank >= 0, "non-positive rank");
      a.rank = rank;
-     
+
      CHK_MALLOC(a.dims, int, rank);
 
      a.N = 1;
@@ -107,7 +107,7 @@ static void rtranspose(int curdim, int rank, const int *dims,
 {
      int prod_before = 1, prod_after = 1;
      int i;
-     
+
      if (rank == 0) {
 	  *data_t = *data;
 	  return;
@@ -192,15 +192,16 @@ const char arrayh5_read_strerror[][100] = {
 
 int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 		 char **dataname,
-		 int nslicedims, const int *slicedim_, const int *islice_,
+		 int nslicedims_, const int *slicedim_, const int *islice_,
 		 const int *center_slice)
 {
      hid_t file_id = -1, data_id = -1, space_id = -1;
      char *dname = NULL;
      int err = NO_ERROR;
-     hsize_t i, rank, *dims_copy, *maxdims;
-     int *islice = 0, *slicedim = 0;
+     hsize_t i, rank, *dims_copy, *maxdims, *slicedim = 0;
+     int *islice = 0;
      int *dims = 0;
+     hsize_t nslicedims = (hsize_t) nslicedims_;
 
      CHECK(a, "NULL array passed to arrayh5_read");
      a->dims = NULL;
@@ -211,7 +212,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  err = OPEN_FAILED;
 	  goto done;
      }
- 
+
      if (datapath && datapath[0]) {
 	  CHK_MALLOC(dname, char, strlen(datapath) + 1);
 	  strcpy(dname, datapath);
@@ -235,7 +236,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  err = INVALID_RANK;
 	  goto done;
      }
-     
+
      CHK_MALLOC(dims, int, rank);
      CHK_MALLOC(dims_copy, hsize_t, rank);
      CHK_MALLOC(maxdims, hsize_t, rank);
@@ -246,13 +247,13 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 
      free(maxdims);
      free(dims_copy);
-     
+
      for (i = 0; i < nslicedims && slicedim_[i] == NO_SLICE_DIM; ++i)
 	  ;
 
      if (i == nslicedims) { /* no slices */
 	  *a = arrayh5_create(rank, dims);
-	  
+
 	  if (H5Dread(data_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
 		      H5P_DEFAULT, (void *) a->data) < 0) {
 	       err = READ_FAILED;
@@ -261,12 +262,12 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
      }
      else if (nslicedims > 0) {
 	  int j, rank2 = rank;
-	  hssize_t *start;
+	  hsize_t *start;
 	  hsize_t *count;
 	  hid_t mem_space_id;
 	  herr_t readerr;
 
-	  CHK_MALLOC(slicedim, int, nslicedims);
+	  CHK_MALLOC(slicedim, hsize_t, nslicedims);
 	  CHK_MALLOC(islice, int, nslicedims);
 
 	  for (i = j = 0; i < nslicedims; ++i)
@@ -274,8 +275,8 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 		    if (slicedim_[i] == LAST_SLICE_DIM)
 			 slicedim[j] = rank - 1;
 		    else
-			 slicedim[j] = slicedim_[i];
-		    if (slicedim[j] < 0 || slicedim[j] >= rank) {
+			 slicedim[j] = (hsize_t) slicedim_[i];
+		    if (slicedim[j] >= rank) {
 			 err = INVALID_SLICE;
 			 goto done;
 		    }
@@ -289,10 +290,10 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 		    j++;
 	       }
 	  nslicedims = j;
-	  
-	  CHK_MALLOC(start, hssize_t, rank);
+
+	  CHK_MALLOC(start, hsize_t, rank);
 	  CHK_MALLOC(count, hsize_t, rank);
-	  
+
 	  for (i = 0; i < rank; ++i) {
 	       count[i] = dims[i];
 	       start[i] = 0;
@@ -301,7 +302,7 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	       start[slicedim[i]] = islice[i];
 	       count[slicedim[i]] = 1;
 	  }
-	  
+
 	  H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
 			      start, NULL, count, NULL);
 
@@ -311,18 +312,18 @@ int arrayh5_read(arrayh5 *a, const char *fname, const char *datapath,
 	  rank2 = j;
 
 	  *a = arrayh5_create(rank2, dims);
-	  
+
 	  mem_space_id = H5Screate_simple(rank, count, NULL);
 	  H5Sselect_all(mem_space_id);
-	  
-	  readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE, 
-			    mem_space_id, space_id, 
+
+	  readerr = H5Dread(data_id, H5T_NATIVE_DOUBLE,
+			    mem_space_id, space_id,
 			    H5P_DEFAULT, (void *) a->data);
-	  
+
 	  H5Sclose(mem_space_id);
 	  free(count);
 	  free(start);
-	  
+
 	  if (readerr < 0) {
 	       err = SLICE_FAILED;
 	       goto done;
@@ -374,7 +375,7 @@ void arrayh5_write(arrayh5 a, char *filename, char *dataname,
      else
 	  file_id = H5Fcreate(filename, H5F_ACC_TRUNC,
 			      H5P_DEFAULT, H5P_DEFAULT);
-     CHECK(file_id >= 0, "error opening HDF5 output file");     
+     CHECK(file_id >= 0, "error opening HDF5 output file");
 
      if (dataset_exists(file_id, dataname))
 	  H5Gunlink(file_id, dataname);  /* delete it */
@@ -407,7 +408,7 @@ int arrayh5_read_rank(const char *fname, const char *datapath, int *rank)
 	  err = OPEN_FAILED;
 	  goto done;
      }
- 
+
      if (datapath && datapath[0]) {
 	  CHK_MALLOC(dname, char, strlen(datapath) + 1);
 	  strcpy(dname, datapath);
