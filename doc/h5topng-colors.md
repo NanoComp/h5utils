@@ -2,21 +2,33 @@
 
 The `h5topng` utility program contains a number of built-in color tables that you can use for plotting data.  These color tables are listed below, in some cases with notes about where they came from or suggested usage.
 
-(My own favorites for a long time were `bluered` and `dkbluered` for signed data, and `gray` or `hot` for unsigned/nonnegative data.)
-
 ## Color tables
-The color scales that I most commonly use are the following five:
+The color scales that I would tend to recommend are the following five, taken from [the Matplotlib colormaps](https://matplotlib.org/users/colormaps.html):
+
+* `viridis`: ![viridis](images/viridis.png)
+ - the default blue-green-yellow colormap in Matplotlib, a nice sequential colormap
+* `RdBu`: ![RdBu](images/RdBu.png)
+ - red-white-blue colormap, good for signed data in conjunction with `-Z` option to make white=0
+* `inferno`: ![inferno](images/inferno.png)
+  - a black-purple-red-orange-yellow colormap, a good replacement for the old `hot` colormap
+ * `BrBg`: ![RdBu](images/RdBu.png)
+  - brown-white-aquamarine colormap, an alternative to `RdBu` for signed data, also best used in conjunction with the `-Z` option to make white=0
+
+These two are also sometimes useful:
 
 * `gray`:  ![gray](images/Gray_colormap.png)
  - simple black-to-white grayscale color bar
+* `yarg`: ![yarg](images/Yarg.png)
+ - simple white-to-black grayscale color bar (the reverse of `gray`, and almost equivalent to using `-gray` or `gray` with `-r`); this is useful to make contour-like overlays with the `-A` option because its transparency scale (black is transparent) is the opposite of `gray` (white is transparent)
+
+For a long time, I used the following color maps, but nowadays they are somewhat old-fashioned because they aren't "perceptually uniform".  See [this wonderful talk on designing colormaps](https://www.youtube.com/watch?v=xAoljeRJ3lU) for what goes into designing a modern colormap:
+
 * `bluered`: ![bluered](images/Bluered.png)
  - blue-white-red colorbar, useful for signed data in conjunction with `-Z` option to make white=0
 * `dkbluered`: ![dkbluered](images/Dkbluered.png)
  - dark blue-white-red colorbar, useful for signed data in conjunction with `-Z` option to make white=0; similar to `bluered` but shows a bit more dynamic range for the maxima/minima by darkening at the ends
 * `hot`: ![hot](images/Hot.png)
  - black-red-yellow-white color map, useful for nonnegative "intensity" data &mdash; based on [colormap](http://www.mathworks.com/access/helpdesk/help/techdoc/ref/colormap.shtml) of the same name in Matlab, loosely resembling the color of heated object at increasing temperatures
-* `yarg`: ![yarg](images/Yarg.png)
- - simple white-to-black grayscale color bar (the reverse of `gray`, and almost equivalent to using `-gray` or `gray` with `-r`); this is useful to make contour-like overlays with the `-A` option because its transparency scale (black is transparent) is the opposite of `gray` (white is transparent)
 
 The remaining color scales, mostly based on the corresponding [colormaps(http://www.mathworks.com/access/helpdesk/help/techdoc/ref/colormap.shtml) of the same name in Matlab, are:
 
