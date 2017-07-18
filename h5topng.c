@@ -7,10 +7,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -88,7 +88,7 @@ static colormap_t load_colormap(FILE *f, int verbose)
      int nalloc = 0;
      float r,g,b,a;
      int c;
-     
+
      /* read initial comment lines, and echo if verbose */
      do {
 	  while (isspace(c = fgetc(f)));
@@ -96,7 +96,7 @@ static colormap_t load_colormap(FILE *f, int verbose)
 	       while (isspace(c = fgetc(f)) && c != '\n' && c != EOF);
 	       if (c != EOF) ungetc(c, f);
 	       while ('\n' != (c = fgetc(f)) && c != EOF)
-		    if (verbose) 
+		    if (verbose)
 			 putchar(c);
 	       if (verbose)
 		    putchar('\n');
@@ -139,10 +139,10 @@ colormap_t get_cmap(const char *colormap, int invert, double scale_alpha,
 		    int verbose)
 {
      int i;
-     colormap_t cmap;
+     colormap_t cmap = {0, NULL};
      FILE *cmap_f = NULL;
      char *cmap_fname = (char *) malloc(sizeof(char) *
-					(strlen(CMAP_DIR) 
+					(strlen(CMAP_DIR)
 					 + strlen(colormap) + 1));
      CHECK(cmap_fname, "out of memory");
      if (colormap[0] == '-') {
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 		   usage(stdout);
 		   return EXIT_SUCCESS;
 	      case 'V':
-		   printf("h5topng " PACKAGE_VERSION " by Steven G. Johnson\n" 
+		   printf("h5topng " PACKAGE_VERSION " by Steven G. Johnson\n"
 			  COPYRIGHT);
 		   return EXIT_SUCCESS;
 	      case 'v':
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
 	      case 'd':
 		   free(data_name);
 		   data_name = my_strdup(optarg);
-		   break;		   
+		   break;
 	      case 'C':
 		   free(contour_fname);
 		   contour_fname = my_strdup(optarg);
@@ -381,7 +381,7 @@ int main(int argc, char **argv)
 	  usage(stderr);
 	  return EXIT_FAILURE;
      }
-     
+
      contour_data.data = overlay_data.data = NULL;
 
      slicedim3 = slicedim[3];
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 	       printf("data rank = %d\n", data_rank);
      }
 
- process_files:     
+ process_files:
 
      num_processed = 0;
 
@@ -435,10 +435,10 @@ int main(int argc, char **argv)
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(contour_data.rank == 1 || contour_data.rank == 2,
 	       "contour slice must be one or two dimensional");
-	  
+
 	  cnx = contour_data.dims[0];
 	  cny = contour_data.rank >= 2 ? contour_data.dims[1] : 1;
-	  
+
 	  if (!mask_thresh_set) {
                double c_min, c_max;
                arrayh5_getrange(contour_data, &c_min, &c_max);
@@ -470,7 +470,7 @@ int main(int argc, char **argv)
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(overlay_data.rank == 1 || overlay_data.rank == 2,
 	       "overlay slice must be one or two dimensional");
-	  
+
 	  onx = overlay_data.dims[0];
 	  ony = overlay_data.rank >= 2 ? overlay_data.dims[1] : 1;
 
@@ -501,14 +501,14 @@ int main(int argc, char **argv)
 	  CHECK(!err, arrayh5_read_strerror[err]);
 	  CHECK(a.rank >= 1, "data must have at least one dimension");
 	  CHECK(a.rank <= 2, "data can have at most two dimensions (try specifying a slice)");
-	  
+
 	  if (!png_fname) {
 	       char dimname[] = "xyzt", suff[1024] = "";
 	       int dim;
 	       for (dim = 0; dim < 4; ++dim)
 		    if (islice_max[dim] >= islice_min[dim]+islice_step[dim]) {
 			 char s[128];
-			 sprintf(s, ".%c%0*d", dimname[dim], 
+			 sprintf(s, ".%c%0*d", dimname[dim],
 				 1 + ilog10(imax(iabs(islice_min[dim]),
 						 iabs(islice_max[dim]))),
 				 islice[dim]);
@@ -517,7 +517,7 @@ int main(int argc, char **argv)
 	       strcat(suff, ".png");
 	       png_fname = replace_suffix(h5_fname, ".h5", suff);
 	  }
-	  
+
 	  {
 	       double a_min, a_max;
 	       arrayh5_getrange(a, &a_min, &a_max);
@@ -542,20 +542,20 @@ int main(int argc, char **argv)
 		    min = -max;
 	       }
 	  }
-	  
+
 	  if (!collect_range) {
 	       nx = a.dims[0];
 	       ny = a.rank < 2 ? 1 : a.dims[1];
-	       
+
 	       if (verbose)
 		    printf("writing \"%s\" from %dx%d input data.\n",
 			   png_fname, nx, ny);
-	       
+
 	       writepng(png_fname, nx, ny, !transpose, skew,
-			scaley, scalex, a.data, 
+			scaley, scalex, a.data,
 			contour_fname ? contour_data.data : NULL, mask_thresh,
 			cnx, cny,
-			overlay_fname ? overlay_data.data : NULL,overlay_cmap, 
+			overlay_fname ? overlay_data.data : NULL,overlay_cmap,
 			onx, ony,
 			min, max, cmap, eight_bit);
 	  }

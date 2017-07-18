@@ -335,7 +335,6 @@ void writepng(char *filename,
 		       PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
      else {
 	  png_colorp palette;
-
 	  png_set_IHDR(png_ptr, info_ptr, width, height, 8 /* bit_depth */ ,
 		       PNG_COLOR_TYPE_PALETTE,
 		       PNG_INTERLACE_NONE,
@@ -436,8 +435,8 @@ void writepng(char *filename,
      /* if you malloced the palette, free it here */
      {
           png_colorp palette; int num_palette;
-          png_get_PLTE(png_ptr, info_ptr, &palette, &num_palette);
-          free(palette);
+          if (0 != png_get_PLTE(png_ptr, info_ptr, &palette, &num_palette))
+               png_free(png_ptr, palette);
      }
 
      /* if you allocated any text comments, free them here */
