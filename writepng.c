@@ -7,10 +7,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -56,7 +56,7 @@ static void convert_row(int png_width, int data_width,
 			REAL mask_thresh, REAL *mask_prev, int init_mask_prev,
 			png_byte mask_byte,
 			int mny, int mstride,
-			int overlay, REAL *olayrow, REAL *olayrow2, 
+			int overlay, REAL *olayrow, REAL *olayrow2,
 			colormap_t olay_cmap, REAL olaymin, REAL olaymax,
 			int ony, int ostride,
 			colormap_t cmap,
@@ -80,7 +80,7 @@ static void convert_row(int png_width, int data_width,
 			 = row_pointer[3*i + 2] = mask_byte;
 	       continue;
 	  }
-	  
+
 	  if (delta == 0.0) {
 	       val = (datarow[n * stride] * weightrow +
 		      datarow2[n * stride] * (1 - weightrow));
@@ -95,25 +95,25 @@ static void convert_row(int png_width, int data_width,
 	  else {
 	       int n2 = PIN(0, n + (delta < 0.0 ? -1 : 1), data_width-1);
 	       REAL absdelta = fabs(delta);
-	       val = 
+	       val =
 		    (datarow[n * stride] * (1 - absdelta) +
 		     datarow[n2 * stride] * absdelta) * weightrow +
 		    (datarow2[n * stride] * (1 - absdelta) +
-		     datarow2[n2 * stride] * absdelta) * 
+		     datarow2[n2 * stride] * absdelta) *
 		    (1 - weightrow);
 	       if (overlay)
-		    olayval = 
+		    olayval =
 			 (olayrow[(n%ony) * ostride] * (1 - absdelta) +
 			  olayrow[(n2%ony) * ostride] * absdelta) * weightrow +
 			 (olayrow2[(n%ony) * ostride] * (1 - absdelta) +
-			  olayrow2[(n2%ony) * ostride] * absdelta) * 
+			  olayrow2[(n2%ony) * ostride] * absdelta) *
 		    (1 - weightrow);
 	       if (maskrow != NULL) {
-		    maskval = 
+		    maskval =
 			 (maskrow[(n%mny) * mstride] * (1 - absdelta) +
 			  maskrow[(n2%mny) * mstride] * absdelta) * weightrow +
 			 (maskrow2[(n%mny) * mstride] * (1 - absdelta) +
-			  maskrow2[(n2%mny) * mstride] * absdelta) * 
+			  maskrow2[(n2%mny) * mstride] * absdelta) *
 			 (1 - weightrow);
 	       }
 	  }
@@ -123,9 +123,9 @@ static void convert_row(int png_width, int data_width,
 	       if (init_mask_prev)
 		    maskmin = maskmax = maskval;
 	       else {
-		    maskmin = MIN(MIN(maskval, i ? mask_prev[i-1] : maskval), 
+		    maskmin = MIN(MIN(maskval, i ? mask_prev[i-1] : maskval),
 				  mask_prev[i]);
-		    maskmax = MAX(MAX(maskval, i ? mask_prev[i-1] : maskval), 
+		    maskmax = MAX(MAX(maskval, i ? mask_prev[i-1] : maskval),
 				  mask_prev[i]);
 	       }
 	       mask_prev[i] = maskval;
@@ -138,14 +138,14 @@ static void convert_row(int png_width, int data_width,
 			      = row_pointer[3*i + 2] = mask_byte;
 		    continue;
 	       }
-	  }	 
-	  
+	  }
+
 	  if (val > maxrange)
 	       val = maxrange;
 	  else if (val < minrange)
 	       val = minrange;
-	  
-	  if (eight_bit) 
+
+	  if (eight_bit)
 	       row_pointer[i] = (val - minrange) * scale;
 	  else if (overlay) {
 	       float r, g, b, a, ro, go, bo, ao;
@@ -190,7 +190,7 @@ static void init_palette(png_colorp palette, colormap_t colormap,
      }
 
      /* set mask color: */
-     palette[255].green = palette[255].blue = palette[255].red = mask_byte; 
+     palette[255].green = palette[255].blue = palette[255].red = mask_byte;
 }
 
 #define USE_ALPHA 0
@@ -223,7 +223,7 @@ static void init_alpha(png_structp png_ptr, png_infop info_ptr,
 #endif
 
 void writepng(char *filename,
-	      int nx, int ny, int transpose, 
+	      int nx, int ny, int transpose,
 	      REAL skew, REAL scalex, REAL scaley,
 	      REAL * data,
 	      REAL *mask, REAL mask_thresh,
@@ -246,7 +246,7 @@ void writepng(char *filename,
 	  eight_bit = 0;
 
      /* compute png size from scaled (and possibly transposed) data size,
-      * and reverse the meaning of the scale factors; now they are what we 
+      * and reverse the meaning of the scale factors; now they are what we
       * multiply png coordinates by to get data coordinates: */
 
      if (transpose) {
@@ -309,7 +309,7 @@ void writepng(char *filename,
      }
      /* Set error handling.  REQUIRED if you aren't supplying your own *
       * error hadnling functions in the png_create_write_struct() call. */
-     if (setjmp(png_ptr->jmpbuf)) {
+     if (setjmp(png_jmpbuf(png_ptr))) {
 	  /* If we get here, we had a problem reading the file */
 	  fclose(fp);
 	  png_destroy_write_struct(&png_ptr, (png_infopp) NULL);
@@ -398,7 +398,7 @@ void writepng(char *filename,
 	       if (transpose)
 		    convert_row(width, data_width, scaley, offset,
 				data + n, data + n2, 1 - fabs(delta),
-				data_height, 
+				data_height,
 				mask ? mask + (n%mny) : NULL,
 				mask ? mask + (n3%mny) : NULL,
 				mask_thresh, mask_prev, row == height-1,
@@ -412,7 +412,7 @@ void writepng(char *filename,
 		    convert_row(width, data_width, scaley, offset,
 				data + n * data_width, data + n2 * data_width,
 				1 - fabs(delta),
-				1, 
+				1,
 				mask ? mask + (n%mnx) * mny : NULL,
 				mask ? mask + (n3%mnx) * mny : NULL,
 				mask_thresh, mask_prev, row == height-1,
@@ -434,7 +434,11 @@ void writepng(char *filename,
      png_write_end(png_ptr, info_ptr);
 
      /* if you malloced the palette, free it here */
-     free(info_ptr->palette);
+     {
+          png_colorp palette; int num_palette;
+          png_get_PLTE(png_ptr, info_ptr, &palette, &num_palette);
+          free(palette);
+     }
 
      /* if you allocated any text comments, free them here */
 
@@ -450,17 +454,17 @@ void writepng(char *filename,
 /* In the following code, we use a heuristic algorithm to compute
  * the range.  The range is set to [-r, r], where r is computed
  * as follows:
- * 
+ *
  * 1) for each new data set, compute
  * r' = sqrt(2.0 * (average of non-zero data[i]^2))
- * 
+ *
  * 2) r = max(r', r of previous data set)
  */
 
 #define WHITE_EPSILON 0.003921568627	/* 1 / 255 */
 
 void writepng_autorange(char *filename,
-			int nx, int ny, int transpose, 
+			int nx, int ny, int transpose,
 			REAL skew, REAL scalex,REAL scaley,
 			REAL * data,
 			REAL *mask, REAL mask_thresh,
