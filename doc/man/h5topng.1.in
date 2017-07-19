@@ -27,7 +27,7 @@ h5topng \- generate PNG images from 2d slices of HDF5 files
 [\fIOPTION\fR]... [\fIHDF5FILE\fR]...
 .SH DESCRIPTION
 .PP
-." Add any additional description here
+.\" Add any additional description here
 h5topng is a utility to generate images in PNG (Portable Network Graphics)
 format from two-dimensional slices of datasets in HDF5 files.  It is
 designed for quick-and-dirty visualization of scientific data, and for
