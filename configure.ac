@@ -68,7 +68,7 @@ AC_CHECK_LIB(matheval, evaluator_get_variables, H5MATH=yes, H5MATH=no)
 
 if test $H5MATH = yes; then
 	MORE_H5UTILS="h5math\$(EXEEXT) $MORE_H5UTILS"
-	MORE_H5UTILS_MANS="h5math.1 $MORE_H5UTILS_MANS"
+	MORE_H5UTILS_MANS="doc/man/h5math.1 $MORE_H5UTILS_MANS"
 else
 	AC_MSG_WARN([can't find libmatheval: won't be able to compile h5math])
 fi
@@ -102,11 +102,11 @@ if test "x$H4TOH5" != xh4toh5 -o "x$H5TOH4" != xh5toh4; then
 	if test $HDF4 = yes; then
 		if test "x$H4TOH5" != xh4toh5; then
 		   MORE_H5UTILS="h5fromh4\$(EXEEXT) $MORE_H5UTILS"
-		   MORE_H5UTILS_MANS="h5fromh4.1 $MORE_H5UTILS_MANS"
+		   MORE_H5UTILS_MANS="doc/man/h5fromh4.1 $MORE_H5UTILS_MANS"
 		fi
 		if test "x$H5TOH4" != xh5toh4; then
 		   MORE_H5UTILS="h4fromh5\$(EXEEXT) $MORE_H5UTILS"
-		   # MORE_H5UTILS_MANS="h4fromh5.1 $MORE_H5UTILS_MANS"
+		   # MORE_H5UTILS_MANS="doc/man/h4fromh5.1 $MORE_H5UTILS_MANS"
 		fi
 	fi
 fi
@@ -187,7 +187,7 @@ elif test "$ok" != "no"; then
 fi
 if test $H5TOV5D = yes; then
 	MORE_H5UTILS="h5tov5d\$(EXEEXT) $MORE_H5UTILS"
-	MORE_H5UTILS_MANS="h5tov5d.1 $MORE_H5UTILS_MANS"
+	MORE_H5UTILS_MANS="doc/man/h5tov5d.1 $MORE_H5UTILS_MANS"
 fi
 AC_SUBST(V5D_FILES)
 AC_SUBST(V5D_INCLUDES)
