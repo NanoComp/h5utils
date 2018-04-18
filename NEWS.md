@@ -2,6 +2,12 @@
 
 Here, we describe what has changed between releases of the [h5utils](README.md) package.
 
+## h5utils-1.13.1 ##
+
+*3/19/18*
+
+* Fixed man page problems (#2 and #3), thanks to Bas Couwenberg.
+
 ## h5utils-1.13 ##
 
 *7/18/17*

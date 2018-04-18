@@ -10,9 +10,9 @@ This package is developed by [Steven G. Johnson](http://math.mit.edu/~stevenj/),
 
 # Download and Install
 
-The latest version is h5utils 1.13, which can be downloaded in source-code form at:
+The latest version is h5utils 1.13.1, which can be downloaded in source-code form at:
 
-* https://github.com/stevengj/h5utils/releases/download/1.13/h5utils-1.13.tar.gz
+* https://github.com/stevengj/h5utils/releases/download/1.13.1/h5utils-1.13.1.tar.gz
 
 (Download this `.tar.gz` file rather than cloning the [git repo](https://github.com/stevengj/h5utils)
 unless you are a developer, since the git repo requires additional tools to build as described below.)
