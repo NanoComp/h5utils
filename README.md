@@ -12,9 +12,9 @@ This package is developed by [Steven G. Johnson](http://math.mit.edu/~stevenj/),
 
 The latest version is h5utils 1.13.1, which can be downloaded in source-code form at:
 
-* https://github.com/stevengj/h5utils/releases/download/1.13.1/h5utils-1.13.1.tar.gz
+* https://github.com/NanoComp/h5utils/releases/download/1.13.1/h5utils-1.13.1.tar.gz
 
-(Download this `.tar.gz` file rather than cloning the [git repo](https://github.com/stevengj/h5utils)
+(Download this `.tar.gz` file rather than cloning the [git repo](https://github.com/NanoComp/h5utils)
 unless you are a developer, since the git repo requires additional tools to build as described below.)
 
 What's new in each version is described in the [release notes](NEWS.md) file.
@@ -35,7 +35,7 @@ make install
 ```
 See `./configure --help` for more options. You can use `make uninstall` to get rid of all the installed files.
 
-**Github**: If you are using the source [on github](https://github.com/stevengj/h5utils) (via `git clone https://github.com/stevengj/h5utils`), then you will also need to have [GNU autoconf, automake, and libtool](https://en.wikipedia.org/wiki/GNU_Build_System) installed, and run `sh autogen.sh` (in a Unix shell) to set up things before running `make` above (`autogen.sh` runs `./configure` for you).
+**Github**: If you are using the source [on github](https://github.com/NanoComp/h5utils) (via `git clone https://github.com/NanoComp/h5utils`), then you will also need to have [GNU autoconf, automake, and libtool](https://en.wikipedia.org/wiki/GNU_Build_System) installed, and run `sh autogen.sh` (in a Unix shell) to set up things before running `make` above (`autogen.sh` runs `./configure` for you).
 
 **Note:** if you get a message like `cannot compute sizeof (unsigned long)` when running `./configure`, it probably means you didn't install the HDF5 library properly: you need to tell the runtime linker where to find it. On GNU/Linux, make sure there is a line `/usr/local/lib` in `/etc/ld.so.conf` and run `/sbin/ldconfig` (assuming you installed HDF5 in the default location).
 
