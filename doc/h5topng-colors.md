@@ -30,7 +30,7 @@ For a long time, I used the following color maps, but nowadays they are somewhat
 * `hot`: ![hot](images/Hot.png)
  - black-red-yellow-white color map, useful for nonnegative "intensity" data &mdash; based on [colormap](http://www.mathworks.com/access/helpdesk/help/techdoc/ref/colormap.shtml) of the same name in Matlab, loosely resembling the color of heated object at increasing temperatures
 
-The remaining color scales, mostly based on the corresponding [colormaps(http://www.mathworks.com/access/helpdesk/help/techdoc/ref/colormap.shtml) of the same name in Matlab, are:
+The remaining color scales, mostly based on the corresponding [colormaps](http://www.mathworks.com/access/helpdesk/help/techdoc/ref/colormap.shtml) of the same name in Matlab, are:
 
 * `autumn`: ![autumn](images/Autumn.png)
  - red-orange-yellow color map
