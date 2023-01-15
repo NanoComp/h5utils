@@ -46,7 +46,7 @@ oct_DATA = @H5READ@
 h5read.oct: h5read.cc arrayh5.h arrayh5.o
 	mkoctfile $(DEFS) $(CPPFLAGS) $(srcdir)/h5read.cc $(srcdir)/arrayh5.c $(LDFLAGS) $(LIBS)
 
-clean-hook:
+clean-local:
 	rm -f h5read.oct
 
 nobase_dist_pkgdata_DATA = $(COLORMAPS)
