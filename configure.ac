@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(h5utils, 1.13.1, stevenj@alum.mit.edu)
+AC_INIT([h5utils],[1.13.1],[stevenj@alum.mit.edu])
 AM_INIT_AUTOMAKE([foreign silent-rules 1.6])
 AM_SILENT_RULES(yes)
 AC_CONFIG_SRCDIR([h5topng.c])
@@ -9,9 +9,6 @@ AM_MAINTAINER_MODE
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
-
-# Checks for header files.
-AC_HEADER_STDC
 
 AC_CHECK_LIB(m, sin)
 AC_CHECK_FUNCS(snprintf)
@@ -28,7 +25,7 @@ fi
 
 dnl add gcc warnings, in debug/maintainer mode only
 if test "$enable_debug" = yes || test "$USE_MAINTAINER_MODE" = yes; then
-	if test $ac_cv_prog_gcc = yes; then
+	if test $ac_cv_c_compiler_gnu = yes; then
 		CFLAGS="$CFLAGS -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -pedantic -Wno-long-long -Wshadow -Wbad-function-cast -Wwrite-strings -Wstrict-prototypes -Wredundant-decls -Wnested-externs" # -Wundef -Wconversion -Wmissing-prototypes -Wmissing-declarations
 	fi
 fi
@@ -81,7 +78,7 @@ AC_CHECK_PROG(H4TOH5, h4toh5, h4toh5)
 AC_CHECK_PROG(H5TOH4, h5toh4, h5toh4)
 
 AC_ARG_WITH(hdf4,
-	[AC_HELP_STRING([--with-hdf4], [build hdf4 utils even if h4toh5 and h5toh4 are present])],
+	[AS_HELP_STRING([--with-hdf4],[build hdf4 utils even if h4toh5 and h5toh4 are present])],
 	ok=$withval, ok=maybe)
 if test "x$ok" = xyes; then
 	H4TOH5=""
@@ -121,7 +118,7 @@ AC_CHECK_LIB(hdf5, H5Fopen, [LIBS="-lhdf5 $LIBS"],
 
 ###########################################################################
 
-AC_ARG_WITH(octave, [AC_HELP_STRING([--without-octave], [don't compile h5read Octave plugin])], ok=$withval, ok=yes)
+AC_ARG_WITH(octave, [AS_HELP_STRING([--without-octave],[don't compile h5read Octave plugin])], ok=$withval, ok=yes)
 
 H5READ=""
 OCT_INSTALL_DIR=""
@@ -160,7 +157,7 @@ AC_SUBST(OCT_INSTALL_DIR)
 
 ###########################################################################
 
-AC_ARG_WITH(v5d, [AC_HELP_STRING([--with-v5d=<dir>], [use Vis5d in <dir> for h5tov5d])], ok=$withval, ok=yes)
+AC_ARG_WITH(v5d, [AS_HELP_STRING([--with-v5d=<dir>],[use Vis5d in <dir> for h5tov5d])], ok=$withval, ok=yes)
 H5TOV5D=no
 V5D_FILES=""
 V5D_INCLUDES=""
@@ -198,23 +195,23 @@ AC_CHECK_HEADERS([arpa/inet.h netinet/in.h stdint.h inttypes.h])
 AC_CHECK_TYPES([uint16_t, uint32_t])
 
 AC_MSG_CHECKING([for htons])
-AC_TRY_LINK([#if defined(HAVE_ARPA_INET_H)
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if defined(HAVE_ARPA_INET_H)
 #include <arpa/inet.h>
 #elif defined(HAVE_NETINET_IN_H)
 #include <netinet/in.h>
-#endif], [unsigned short i; htons(i);], [htons=yes
-	AC_DEFINE([HAVE_HTONS],1,[Define if you have htons.])], htons=no)
+#endif]], [[unsigned short i; htons(i);]])],[htons=yes
+	AC_DEFINE([HAVE_HTONS],1,[Define if you have htons.])],[htons=no])
 AC_MSG_RESULT($htons)
 
 AC_CHECK_SIZEOF(float)
 
 AC_MSG_CHECKING([for htonl])
-AC_TRY_LINK([#if defined(HAVE_ARPA_INET_H)
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if defined(HAVE_ARPA_INET_H)
 #include <arpa/inet.h>
 #elif defined(HAVE_NETINET_IN_H)
 #include <netinet/in.h>
-#endif], [unsigned long i; htonl(i);], [htonl=yes
-     AC_DEFINE([HAVE_HTONL],1,[Define if you have htonl.])], htonl=no)
+#endif]], [[unsigned long i; htonl(i);]])],[htonl=yes
+     AC_DEFINE([HAVE_HTONL],1,[Define if you have htonl.])],[htonl=no])
 AC_MSG_RESULT($htonl)
 
 if test "x$htons" != xyes -o "x$htonl" != xyes; then
