@@ -2,6 +2,13 @@
 
 Here, we describe what has changed between releases of the [h5utils](README.md) package.
 
+## h5utils-1.13.2 ##
+
+*1/15/23*
+
+* Support relocatable installations by expanding shell metacharacters
+  `~` and environment variables in the colormaps directory (#16).
+
 ## h5utils-1.13.1 ##
 
 *3/19/18*
