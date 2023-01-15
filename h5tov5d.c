@@ -1,4 +1,4 @@
-/* Copyright (c) 1999-2017 Massachusetts Institute of Technology
+/* Copyright (c) 1999-2023 Massachusetts Institute of Technology
  *
  * [ IMPORTANT: Note that the following is DIFFERENT from the license
  *   for the rest of the h5utils package. ]
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 		   return EXIT_SUCCESS;
 	      case 'V':
 		   printf("h5tov5d " PACKAGE_VERSION " by Steven G. Johnson\n" 
-       "Copyright (c) 1999-2017 Massachusetts Institute of Technology\n"
+       "Copyright (c) 1999-2023 Massachusetts Institute of Technology\n"
        "\n"
        "This program is free software; you can redistribute it and/or modify\n"
        "it under the terms of the GNU General Public License as published by\n"

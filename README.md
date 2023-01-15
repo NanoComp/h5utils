@@ -57,7 +57,7 @@ To convert HDF5 to [CDF](http://nssdc.gsfc.nasa.gov/cdf/cdf_home.html) format, s
 
 # License and Copyright
 
-h5utils is Copyright © 1999–2017 Massachusetts Institute of Technology.
+h5utils is Copyright © 1999–2023 Massachusetts Institute of Technology.
 
 *The following [MIT/expat license](https://opensource.org/licenses/MIT) governs the entire contents of h5utils except for the `h5tov5d.c` file. See below.*
 
