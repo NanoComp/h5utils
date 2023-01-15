@@ -41,6 +41,25 @@
 #define OVERLAY_OPACITY_DEFAULT 0.2
 #define CMAP_DIR DATADIR "/" PACKAGE_NAME "/colormaps/"
 
+#if defined(HAVE_WORDEXP) && defined(HAVE_WORDEXP_H)
+#  include <wordexp.h>
+#endif
+
+/* shell expansion on a path, used for CMAP_DIR */
+char *shell_expand(const char *path)
+{
+#if defined(HAVE_WORDEXP) && defined(HAVE_WORDEXP_H)
+	wordexp_t p;
+	char *newpath;
+	wordexp(path, &p, 0);
+	newpath = my_strdup(p.we_wordc == 1 ? p.we_wordv[0] : path);
+	wordfree(&p);
+	return newpath;
+#else
+	return my_strdup(path);
+#endif
+}
+
 void usage(FILE *f)
 {
      fprintf(f, "Usage: h5topng [options] [<filenames>]\n"
@@ -135,21 +154,22 @@ colormap_t copy_colormap(const colormap_t c0)
      return c;
 }
 
-colormap_t get_cmap(const char *colormap, int invert, double scale_alpha,
-		    int verbose)
+colormap_t get_cmap(const char *cmap_dir,
+                    const char *colormap, int invert, double scale_alpha,
+                    int verbose)
 {
      int i;
      colormap_t cmap = {0, NULL};
      FILE *cmap_f = NULL;
      char *cmap_fname = (char *) malloc(sizeof(char) *
-					(strlen(CMAP_DIR)
+					(strlen(cmap_dir)
 					 + strlen(colormap) + 1));
      CHECK(cmap_fname, "out of memory");
      if (colormap[0] == '-') {
 	  invert = 1;
 	  colormap++;
      }
-     strcpy(cmap_fname, CMAP_DIR); strcat(cmap_fname, colormap);
+     strcpy(cmap_fname, cmap_dir); strcat(cmap_fname, colormap);
      if (colormap[0] == '.' || colormap[0] == '/'
 	 || !(cmap_f = fopen(cmap_fname, "r"))) {
 	  free(cmap_fname);
@@ -241,7 +261,7 @@ int main(int argc, char **argv)
      int islice_min[4] = {0,0,0,0}, islice_max[4] = {0,0,0,0}, islice_step[4] = {1,1,1,1};
      int err;
      int nx, ny;
-     char *colormap = NULL, *overlay_colormap = NULL;
+     char *colormap = NULL, *overlay_colormap = NULL, *cmap_dir = NULL;
      int overlay_invert = 0;
      colormap_t cmap = { 0, NULL };
      colormap_t overlay_cmap = { 0, NULL };
@@ -258,6 +278,9 @@ int main(int argc, char **argv)
 
      colormap = my_strdup(CMAP_DEFAULT);
      overlay_colormap = my_strdup(OVERLAY_CMAP_DEFAULT);
+
+     /* do tilde and $foo expansion on CMAP_DIR */
+     cmap_dir = shell_expand(CMAP_DIR);
 
      while ((c = getopt(argc, argv, "ho:x:y:z:t:0c:m:M:RC:b:d:vX:Y:S:TrZs:Va:A:8")) != -1)
 	  switch (c) {
@@ -372,9 +395,9 @@ int main(int argc, char **argv)
      CHECK(!overlay_fname || !eight_bit,
 	   "-8 option is not currently supported with -A");
 
-     cmap = get_cmap(colormap, invert, 1.0, verbose);
+     cmap = get_cmap(cmap_dir, colormap, invert, 1.0, verbose);
      if (overlay_fname)
-	  overlay_cmap = get_cmap(overlay_colormap, overlay_invert,
+	  overlay_cmap = get_cmap(cmap_dir, overlay_colormap, overlay_invert,
 				  overlay_opacity, verbose);
 
      if (optind == argc) {  /* no parameters left */
@@ -592,6 +615,6 @@ int main(int argc, char **argv)
      if (cmap.rgba != gray_colors)
 	  free(cmap.rgba);
      free(colormap);
-
+     free(cmap_dir);
      return EXIT_SUCCESS;
 }

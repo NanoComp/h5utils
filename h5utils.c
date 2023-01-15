@@ -31,10 +31,13 @@
 
 char *my_strdup(const char *s)
 {
-     char *sd = (char *) malloc(sizeof(char) * (strlen(s) + 1));
-     CHECK(sd, "out of memory");
-     strcpy(sd, s);
-     return sd;
+     if (s) {
+          char *sd = (char *) malloc(sizeof(char) * (strlen(s) + 1));
+          CHECK(sd, "out of memory");
+          strcpy(sd, s);
+          return sd;
+     }
+     return NULL;
 }
 
 char *replace_suffix(const char *s, const char *old_suff, const char *new_suff)

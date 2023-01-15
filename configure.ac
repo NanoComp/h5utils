@@ -235,6 +235,10 @@ prefix=$save_prefix
 AC_DEFINE_UNQUOTED(DATADIR, "$datadir_val", [datadir installation prefix])
 AC_SUBST(datadir_val)
 
+# check for POSIX wordexp function if we need expand ~ etcetera
+AC_CHECK_HEADERS([wordexp.h])
+AC_CHECK_FUNCS(wordexp)
+
 ###########################################################################
 AC_SUBST(MORE_H5UTILS)
 AC_SUBST(MORE_H5UTILS_MANS)
