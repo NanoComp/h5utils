@@ -49,7 +49,7 @@ slice, via the
 .B -xyzt
 options.  Yet more options control things like the colormap and
 magnification.  Still, the most basic usage is something like
-\'h5topng foo.h5\', which will output a file foo.png containing an
+\(aqh5topng foo.h5\(aq, which will output a file foo.png containing an
 image from the two-dimensional data in foo.h5.
 .SH OPTIONS
 .TP
