@@ -93,7 +93,9 @@ if test "x$H4TOH5" != xh4toh5 -o "x$H5TOH4" != xh5toh4; then
 	AC_CHECK_LIB(jpeg, jpeg_start_compress,
 		[AC_CHECK_LIB(df, DFSDgetdata,
 			[H4_LIBS="-ldf -ljpeg"; HDF4=yes],
-			[AC_MSG_WARN([can't find libdf (HDF4): won't be able to compile h5fromh4 or h4fromh5])], -ljpeg)],
+			[AC_CHECK_LIB(hdf, DFSDgetdata,
+				[H4_LIBS="-lhdf -ljpeg"; HDF4=yes],
+				[AC_MSG_WARN([can't find libdf/libhdf (HDF4): won't be able to compile h5fromh4 or h4fromh5])])], -ljpeg)],
 		[AC_MSG_WARN([can't find libjpeg: won't be able to compile h5fromh4 or h4fromh5])])
 
 	if test $HDF4 = yes; then
