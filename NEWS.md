@@ -2,6 +2,12 @@
 
 Here, we describe what has changed between releases of the [h5utils](README.md) package.
 
+## h5utils-1.13.3 ##
+
+*9/4/2026*
+
+* Support for HDF4 version 4.4, which renamed the library (#20).
+
 ## h5utils-1.13.2 ##
 
 *1/15/23*
